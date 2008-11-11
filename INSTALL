@@ -1,0 +1,26 @@
+=========================
+INSTALLATION INSTRUCTIONS
+=========================
+
+Simple enough:
+
+make
+su
+make install
+checkinstall
+
+"make install" goes first because we have no checkinstall installed yet :)
+
+"checkinstall" goes latter so we can have a properly installed (and removable)
+               package for checkinstall-1.6.1
+
+               (Be sure to read the README if you're planning on building RPM or
+                Debian binary packages)
+                
+               
+This will install checkinstall-1.6.1, makepak (modified makepkg) and 
+installwatch-0.7.0beta5
+
+
+==========
+$Id: INSTALL,v 1.6.0.3 2004/12/01 21:36:17 izto Exp $

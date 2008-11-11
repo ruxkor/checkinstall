@@ -1,0 +1,129 @@
+FSTAB(5)            Linux Programmer's Manual            FSTAB(5)
+
+
+
+NNAAMMEE
+       fstab - static information about the filesystems
+
+SSYYNNOOPPSSIISS
+       ##iinncclluuddee <<ffssttaabb..hh>>
+
+DDEESSCCRRIIPPTTIIOONN
+       The  file ffssttaabb contains descriptive information about the
+       various file systems.  ffssttaabb is only read by programs, and
+       not written; it is the duty of the system administrator to
+       properly create and maintain this file.   Each  filesystem
+       is  described  on a separate line; fields on each line are
+       separated by tabs or spaces.   The  order  of  records  in
+       ffssttaabb   is   important   because  ffsscckk(8),  mmoouunntt(8),  and
+       uummoouunntt(8) sequentially iterate through ffssttaabb  doing  their
+       thing.
+
+       The  first  field,  (_f_s___s_p_e_c), describes the block special
+       device or remote filesystem to be mounted.
+
+       For ordinary mounts it will hold (a link to) a block  spe-
+       cial  device  node (as created by mmkknnoodd(8)) for the device
+       to be mounted, like `/dev/cdrom' or `/dev/sdb7'.  For  NFS
+       mounts one will have <host>:<dir>, e.g., `knuth.aeb.nl:/'.
+       For procfs, use `proc'.
+
+       Instead of giving the device explicitly, one may  indicate
+       the  (ext2 or XFS) filesystem that is to be mounted by its
+       UUID or volume label (cf.   ee22llaabbeell(8)  or  xxffss__aaddmmiinn(8)),
+       writing  LABEL=<label>  or UUID=<uuid>, e.g., `LABEL=Boot'
+       or `UUID=3e6be9de-8139-11d1-9106-a43f08d823a6'.  This will
+       make  the  system  more  robust: adding or removing a SCSI
+       disk changes the disk device name but not  the  filesystem
+       volume label.
+
+       The second field, (_f_s___f_i_l_e), describes the mount point for
+       the filesystem.  For swap partitions, this field should be
+       specified  as  `none'. If the name of the mount point con-
+       tains spaces these can be escaped as `\040'.
+
+       The third field, (_f_s___v_f_s_t_y_p_e), describes the type  of  the
+       filesystem.   The system currently supports these types of
+       filesystems (and possibly others - consult  _/_p_r_o_c_/_f_i_l_e_s_y_s_-
+       _t_e_m_s):
+
+       _m_i_n_i_x  a  local filesystem, supporting filenames of length
+              14 or 30 characters.
+
+       _e_x_t    a local filesystem with longer filenames and larger
+              inodes.   This  filesystem has been replaced by the
+              _e_x_t_2 file system, and should no longer be used.
+
+       _e_x_t_2   a local filesystem with  longer  filenames,  larger
+              inodes, and lots of other features.
+
+       _x_i_a_f_s  a  local  filesystem  with longer filenames, larger
+              inodes, and lots of other features.
+
+       _x_f_s    a local filesystem with journaling, scalability and
+              lots of other features.
+
+       _m_s_d_o_s  a local filesystem for MS-DOS partitions.
+
+       _h_p_f_s   a local filesystem for HPFS partitions.
+
+       _i_s_o_9_6_6_0
+              a local filesystem used for CD-ROM drives.
+
+       _n_f_s    a  filesystem  for  mounting partitions from remote
+              systems.
+
+       _s_w_a_p   a disk partition to be used for swapping.
+
+       If _f_s___v_f_s_t_y_p_e is specified  as  ``ignore''  the  entry  is
+       ignored.  This is useful to show disk partitions which are
+       currently unused.
+
+       The fourth field, (_f_s___m_n_t_o_p_s), describes the mount options
+       associated with the filesystem.
+
+       It  is formatted as a comma separated list of options.  It
+       contains at least the type of mount  plus  any  additional
+       options  appropriate to the filesystem type.  For documen-
+       tation on the available options for non-nfs file  systems,
+       see  mmoouunntt(8).   For  documentation  on  all  nfs-specific
+       options have a look at nnffss(5).  Common for  all  types  of
+       file  system are the options ``noauto'' (do not mount when
+       "mount -a" is given, e.g., at  boot  time),  and  ``user''
+       (allow a user to mount). For more details, see mmoouunntt(8).
+
+       The  fifth field, (_f_s___f_r_e_q), is used for these filesystems
+       by the dduummpp(8) command to determine which filesystems need
+       to  be dumped.  If the fifth field is not present, a value
+       of zero is returned and dduummpp will assume that the filesys-
+       tem does not need to be dumped.
+
+       The  sixth field, (_f_s___p_a_s_s_n_o), is used by the ffsscckk(8) pro-
+       gram to determine the order in which filesystem checks are
+       done at reboot time.  The root filesystem should be speci-
+       fied with a _f_s___p_a_s_s_n_o of 1, and other  filesystems  should
+       have a _f_s___p_a_s_s_n_o of 2.  Filesystems within a drive will be
+       checked sequentially, but filesystems on different  drives
+       will  be  checked  at the same time to utilize parallelism
+       available in the hardware.  If the sixth field is not pre-
+       sent  or  zero,  a value of zero is returned and ffsscckk will
+       assume that the filesystem does not need to be checked.
+
+       The proper way to read records from ffssttaabb is  to  use  the
+       routines ggeettmmnntteenntt(3).
+
+FFIILLEESS
+       _/_e_t_c_/_f_s_t_a_b The file ffssttaabb resides in _/_e_t_c.
+
+BBUUGGSS
+       The documentation in mmoouunntt(8) is often more up-to-date.
+
+SSEEEE AALLSSOO
+       ggeettmmnntteenntt(3), mmoouunntt(8), sswwaappoonn(8), ffss(5) nnffss(5)
+
+HHIISSTTOORRYY
+       The ffssttaabb file format appeared in 4.0BSD.
+
+
+
+Linux 2.2                  15 June 1999                  FSTAB(5)

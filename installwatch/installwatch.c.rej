@@ -1,0 +1,17 @@
+***************
+*** 896,902 ****
+  			"\td_name    : \"%.*s\"\n",
+  			entry,
+  			entry->d_ino,
+- 			entry->d_off,
+  			entry->d_reclen,
+  			(int)entry->d_type,
+  			(int)entry->d_reclen,(char*)(entry->d_name)
+--- 903,909 ----
+  			"\td_name    : \"%.*s\"\n",
+  			entry,
+  			entry->d_ino,
++ 			D_OFF(entry->d_off),
+  			entry->d_reclen,
+  			(int)entry->d_type,
+  			(int)entry->d_reclen,(char*)(entry->d_name)
