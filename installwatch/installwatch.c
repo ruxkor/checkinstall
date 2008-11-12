@@ -3828,6 +3828,22 @@ int truncate64(const char *path, __off64_t length) {
 #endif /* GLIBC_MINOR >= 1 */
 
 
+/***********************************************
+ * openat() and its relatives are defined here
+ *
+ * They are mostly wrappers for the already
+ * defined "non-at" functions defined above.
+ *
+ * They transform the path relative to the
+ * fd into an absolute path and then call
+ * the normal functions. The transformation
+ * is done by calling instw_setpathrel().
+ *
+ * Maybe we could wrap all of these into a
+ * single generic wrap-any function?
+ *
+ * Thanks to Gilbert Ashley for his work on this!
+ */
 
 #if (GLIBC_MINOR >= 4)
  
