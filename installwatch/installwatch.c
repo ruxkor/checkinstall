@@ -126,6 +126,7 @@ static int (*true_truncate64)(const char *, __off64_t);
 
 #if (GLIBC_MINOR >= 4)
 static int (*true_openat)(int, const char *, int, ...);
+static int (*true_fchmodat)(int, const char *, mode_t, int);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -362,6 +363,7 @@ static void initialize(void) {
 #if (GLIBC_MINOR >= 4)
 
 	true_openat      = dlsym(libc_handle, "openat");
+	true_fchmodat      = dlsym(libc_handle, "fchmodat");
 
 #endif
 
@@ -3860,5 +3862,47 @@ int openat (int dirfd, const char *path, int flags, ...) {
  
 	return result;
 }
+
+int fchmodat (int dirfd, const char *path, mode_t mode, int flag) {
+ 	
+ 	int result;
+ 	instw_t instw;
  
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "fchmodat(%d,%s,0%o)\n", dirfd, path, mode);
+		 #endif
+		 return chmod(path, mode);
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+ 	debug(2, "fchmodat(%d,%s,0%o)\n", dirfd, path, mode);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_chmod(path,mode);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=chmod(instw.path,mode);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+
 #endif /* GLIBC_MINOR >= 4 */
