@@ -369,14 +369,25 @@ static int vlambda_log(const char *logname,const char *format,va_list ap) {
 	int count;
 	int logfd;
 	int rcod=0;
+        int s_errno;
+ 
+        /* save errno */
+        s_errno = errno;
 
+        buffer[BUFSIZE-2] = '\n';
+        buffer[BUFSIZE-1] = '\0';
+   
 	count=vsnprintf(buffer,BUFSIZE,format,ap);
 	if(count == -1) {
 		  /* The buffer was not big enough */
 		strcpy(&(buffer[BUFSIZE - 5]), "...\n");
 		count=BUFSIZE-1;
 	}
-	
+        else
+        {
+                count = strlen(buffer);
+        }
+       	
 	if(logname!=NULL) {
 		logfd=true_open(logname,O_WRONLY|O_CREAT|O_APPEND,0666);
 		if(logfd>=0) {
@@ -394,9 +405,12 @@ static int vlambda_log(const char *logname,const char *format,va_list ap) {
 				logname,buffer,strerror(errno));
 		}
 	} else {
-		syslog(LOGLEVEL,buffer);
+		syslog(LOGLEVEL, "%s", buffer);
 	}	
 
+	/* restore errno */
+        errno = s_errno;
+	
 	return rcod;
 }
 
@@ -472,6 +486,10 @@ static inline int debug(int dbglvl,const char *format,...) {
  * /
  */
 static int canonicalize(const char *path, char *resolved_path) {
+        int s_errno;
+
+        /* save errno */
+        s_errno = errno;
 
 	unset_okwrap();
 
@@ -481,8 +499,9 @@ static int canonicalize(const char *path, char *resolved_path) {
 		 	 * to the current working directory if it was not 
 		 	 * an absolute path                               */
 			true_getcwd(resolved_path, PATH_MAX-2);
+			resolved_path[MAXPATHLEN-2] = '\0';
 			strcat(resolved_path, "/");
-			strncat(resolved_path, path, MAXPATHLEN - 1);
+			strncat(resolved_path, path, MAXPATHLEN - 1 - strlen(resolved_path));
 		} else {
 			strcpy(resolved_path,path);
 		}
@@ -493,6 +512,8 @@ static int canonicalize(const char *path, char *resolved_path) {
 #if DEBUG
 	debug(4,"canonicalize(%s,%s)\n",path,resolved_path);
 #endif
+        /* restore errno */
+        errno = s_errno;
 
 	return 0;
 } 
@@ -500,8 +521,10 @@ static int canonicalize(const char *path, char *resolved_path) {
 static int make_path (const char *path) {
 	char checkdir[BUFSIZ];
 	struct stat inode;
-
+	int s_errno;
 	int i = 0;
+        /* save errno */
+        s_errno = errno;
 
 #if DEBUG
 	debug(2,"===== make_path: %s\n", path);
@@ -516,6 +539,10 @@ static int make_path (const char *path) {
 		}
 		i++;
 	}
+	
+        /* restore errno */
+        errno = s_errno;
+        
 	return 0;
 }
 
