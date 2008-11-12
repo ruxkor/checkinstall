@@ -1,16 +1,51 @@
 ***************
-*** 93,98 ****
-  static int (*true_utimes)(const char *,const struct timeval *);
-  static int (*true_setxattr)(const char *,const char *,const void *,
-                              size_t, int);
+*** 2344,2350 ****
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') {
+  		backup(instw.truepath);
+  		instw_apply(&instw);
+- 		log("%d\tfopen\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
+  	}
   
-  #if(GLIBC_MINOR >= 1)
+--- 2344,2350 ----
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') {
+  		backup(instw.truepath);
+  		instw_apply(&instw);
++ 		logg("%d\tfopen\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
+  	}
   
---- 93,99 ----
-  static int (*true_utimes)(const char *,const struct timeval *);
-  static int (*true_setxattr)(const char *,const char *,const void *,
-                              size_t, int);
-+ static int (*true_removexattr)(const char *,const char *);
+***************
+*** 2359,2365 ****
+  	}
+  	
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
+- 		log("%d\tfopen\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
   
-  #if(GLIBC_MINOR >= 1)
+  	instw_delete(&instw);
+--- 2359,2365 ----
+  	}
+  	
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
++ 		logg("%d\tfopen\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
   
+  	instw_delete(&instw);
+***************
+*** 3415,3421 ****
+  	}
+  
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
+- 		log("%d\tfopen64\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
+  
+  	instw_delete(&instw);
+--- 3415,3421 ----
+  	}
+  
+  	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
++ 		logg("%d\tfopen64\t%s\t#%s\n",(int)result,
+  		    instw.reslvpath,error(result));
+  
+  	instw_delete(&instw);

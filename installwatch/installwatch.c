@@ -102,10 +102,11 @@ static int (*true_truncate)(const char *, TRUNCATE_T);
 static int (*true_unlink)(const char *);
 static int (*true_utime)(const char *,const struct utimbuf *);
 static int (*true_utimes)(const char *,const struct timeval *);
+static int (*true_access)(const char *, int);
 static int (*true_setxattr)(const char *,const char *,const void *,
                             size_t, int);
 static int (*true_removexattr)(const char *,const char *);
-static int (*true_access)(const char *, int);
+static int (*true_execve)(const char *,char *const*,char *const*);
 
 #if(GLIBC_MINOR >= 1)
 
@@ -267,7 +268,7 @@ static int lambda_log(const char *logname,const char *format,...)
 ;
 */
 
-static inline int log(const char *format,...)
+static inline int logg(const char *format,...)
 #ifdef __GNUC__
 	/* Tell gcc that this function behaves like printf()
 	 * for parameters 1 and 2                            */
@@ -347,6 +348,7 @@ static void initialize(void) {
 	true_lxstat64    = dlsym(libc_handle, "__lxstat64");
 	true_truncate64  = dlsym(libc_handle, "truncate64");
         true_removexattr = dlsym(libc_handle, "removexattr");
+	true_execve      = dlsym(libc_handle, "execve");
 #endif
 
 	if(instw_init()) exit(-1);
@@ -448,7 +450,7 @@ static int lambda_log(const char *logname,const char *format, ...) {
 }
 */
 
-static inline int log(const char *format,...) {
+static inline int logg(const char *format,...) {
 	char *logname;
 	va_list ap;
 	int rcod; 
@@ -2179,7 +2181,7 @@ int chmod(const char *path, mode_t mode) {
 	instw_apply(&instw);
 
 	result = true_chmod(instw.translpath, mode);
-	log("%d\tchmod\t%s\t0%04o\t#%s\n",result,
+	logg("%d\tchmod\t%s\t0%04o\t#%s\n",result,
 	    instw.reslvpath,mode,error(result));
 
 	instw_delete(&instw);
@@ -2218,7 +2220,7 @@ int chown(const char *path, uid_t owner, gid_t group) {
 	instw_apply(&instw);
 
 	result=true_chown(instw.translpath,owner,group);
-	log("%d\tchown\t%s\t%d\t%d\t#%s\n",result,
+	logg("%d\tchown\t%s\t%d\t%d\t#%s\n",result,
 	    instw.reslvpath,owner,group,error(result));
 
 	instw_delete(&instw);
@@ -2245,7 +2247,7 @@ int chroot(const char *path) {
 	   * From now on, another log file will be written if 
 	   * INSTW_LOGFILE is set                          
 	   */
-	log("%d\tchroot\t%s\t#%s\n", result, canonic, error(result));
+	logg("%d\tchroot\t%s\t#%s\n", result, canonic, error(result));
 	return result;
 }
 
@@ -2281,7 +2283,7 @@ int creat(const char *pathname, mode_t mode) {
 	instw_apply(&instw);
 
 	result = true_open(instw.translpath,O_CREAT|O_WRONLY|O_TRUNC,mode);
-	log("%d\tcreat\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tcreat\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -2301,7 +2303,7 @@ int fchmod(int filedes, mode_t mode) {
 #endif
 
 	result = true_fchmod(filedes, mode);
-	log("%d\tfchmod\t%d\t0%04o\t#%s\n",result,filedes,mode,error(result));
+	logg("%d\tfchmod\t%d\t0%04o\t#%s\n",result,filedes,mode,error(result));
 	return result;
 }
 
@@ -2318,7 +2320,7 @@ int fchown(int fd, uid_t owner, gid_t group) {
 #endif
 
 	result = true_fchown(fd, owner, group);
-	log("%d\tfchown\t%d\t%d\t%d\t#%s\n",result,fd,owner,group,error(result));
+	logg("%d\tfchown\t%d\t%d\t%d\t#%s\n",result,fd,owner,group,error(result));
 	return result;
 }
 
@@ -2353,7 +2355,7 @@ FILE *fopen(const char *pathname, const char *mode) {
 	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') {
 		backup(instw.truepath);
 		instw_apply(&instw);
-		log("%" PRIdPTR "\tfopen\t%s\t#%s\n",(intptr_t)result,
+		logg("%" PRIdPTR "\tfopen\t%s\t#%s\n",(intptr_t)result,
 		    instw.reslvpath,error(result));
 	}
 
@@ -2368,7 +2370,7 @@ FILE *fopen(const char *pathname, const char *mode) {
 	}
 	
 	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
-		log("%" PRIdPTR "\tfopen\t%s\t#%s\n",(intptr_t)result,
+		logg("%" PRIdPTR "\tfopen\t%s\t#%s\n",(intptr_t)result,
 		    instw.reslvpath,error(result));
 
 	instw_delete(&instw);
@@ -2389,7 +2391,7 @@ int ftruncate(int fd, TRUNCATE_T length) {
 #endif
 
 	result = true_ftruncate(fd, length);
-	log("%d\tftruncate\t%d\t%d\t#%s\n",result,fd,(int)length,error(result));
+	logg("%d\tftruncate\t%d\t%d\t#%s\n",result,fd,(int)length,error(result));
 	return result;
 }
 
@@ -2489,7 +2491,7 @@ int lchown(const char *path, uid_t owner, gid_t group) {
 	instw_apply(&instw);
 
 	result=true_lchown(instw.translpath,owner,group);
-	log("%d\tlchown\t%s\t%d\t%d\t#%s\n",result,
+	logg("%d\tlchown\t%s\t%d\t%d\t#%s\n",result,
 	    instw.reslvpath,owner,group,error(result));
 	    
 	instw_delete(&instw);
@@ -2533,7 +2535,7 @@ int link(const char *oldpath, const char *newpath) {
 	instw_apply(&instw_n);
 	
 	result=true_link(instw_o.translpath,instw_n.translpath);
-	log("%d\tlink\t%s\t%s\t#%s\n",result,
+	logg("%d\tlink\t%s\t%s\t#%s\n",result,
 	    instw_o.reslvpath,instw_n.reslvpath,error(result));
 	    
 	instw_delete(&instw_o);
@@ -2572,7 +2574,7 @@ int mkdir(const char *pathname, mode_t mode) {
 	instw_apply(&instw);
 
 	result=true_mkdir(instw.translpath,mode);
-	log("%d\tmkdir\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tmkdir\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -2610,7 +2612,7 @@ int __xmknod(int version,const char *pathname, mode_t mode,dev_t *dev) {
 	backup(instw.truepath);
 
 	result=true_xmknod(version,instw.translpath,mode,dev);
-	log("%d\tmknod\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tmknod\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 	
@@ -2665,7 +2667,7 @@ int open(const char *pathname, int flags, ...) {
 		result=true_open(instw.path,flags,mode);
 	
 	if(flags & (O_WRONLY | O_RDWR)) 
-		log("%d\topen\t%s\t#%s\n",result,instw.reslvpath,error(result));
+		logg("%d\topen\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -2825,7 +2827,7 @@ int rename(const char *oldpath, const char *newpath) {
 	instw_apply(&newinstw);
 
 	result=true_rename(oldinstw.translpath,newinstw.translpath);
-	log("%d\trename\t%s\t%s\t#%s\n",result,
+	logg("%d\trename\t%s\t%s\t#%s\n",result,
 	    oldinstw.reslvpath,newinstw.reslvpath,error(result));
 
 	instw_delete(&oldinstw);
@@ -2861,7 +2863,7 @@ int rmdir(const char *pathname) {
 	instw_apply(&instw);
 
 	result=true_rmdir(instw.translpath);
-	log("%d\trmdir\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\trmdir\t%s\t#%s\n",result,instw.reslvpath,error(result));
 	
 	instw_delete(&instw);
 	
@@ -3010,7 +3012,7 @@ int symlink(const char *pathname, const char *slink) {
 	instw_apply(&instw_slink);
 	
 	result=true_symlink(pathname,instw_slink.translpath);
-	log("%d\tsymlink\t%s\t%s\t#%s\n",
+	logg("%d\tsymlink\t%s\t%s\t#%s\n",
            result,instw.path,instw_slink.reslvpath,error(result));
 
 	    
@@ -3051,7 +3053,7 @@ int truncate(const char *path, TRUNCATE_T length) {
 	instw_apply(&instw);
 
 	result=true_truncate(instw.translpath,length);
-	log("%d\ttruncate\t%s\t%d\t#%s\n",result,
+	logg("%d\ttruncate\t%s\t%d\t#%s\n",result,
 	    instw.reslvpath,(int)length,error(result));
 
 	instw_delete(&instw);
@@ -3090,7 +3092,7 @@ int unlink(const char *pathname) {
 	instw_apply(&instw);
 
 	result=true_unlink(instw.translpath);
-	log("%d\tunlink\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tunlink\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -3126,7 +3128,7 @@ int utime (const char *pathname, const struct utimbuf *newtimes) {
 	instw_apply(&instw);
 
 	result=true_utime(instw.translpath,newtimes);
-	log("%d\tutime\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tutime\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -3162,7 +3164,7 @@ int utimes (const char *pathname, const struct timeval *newtimes) {
        instw_apply(&instw);
 
        result=true_utimes(instw.translpath,newtimes);
-       log("%d\tutimes\t%s\t#%s\n",result,instw.reslvpath,error(result));
+       logg("%d\tutimes\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
        instw_delete(&instw);
 
@@ -3198,7 +3200,7 @@ int access (const char *pathname, int type) {
        instw_apply(&instw);
 
        result=true_access(instw.translpath,type);
-       log("%d\taccess\t%s\t#%s\n",result,instw.reslvpath,error(result));
+       logg("%d\taccess\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
        instw_delete(&instw);
 
@@ -3239,7 +3241,7 @@ int setxattr (const char *pathname, const char *name,
         instw_apply(&instw);
 
         result=true_setxattr(instw.translpath,name,value,size,flags);
-        log("%d\tsetxattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
+        logg("%d\tsetxattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
         instw_delete(&instw);
 
@@ -3278,11 +3280,48 @@ int removexattr (const char *pathname, const char *name)
         instw_apply(&instw);
 
         result=true_removexattr(instw.translpath,name);
-        log("%d\tremovexattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
+        logg("%d\tremovexattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
         instw_delete(&instw);
 
         return result;
+}
+
+int execve(const char *pathname, char *const argv[], char *const envp[])
+{
+      int result;
+      instw_t instw;
+      int status;
+      
+      if (!libc_handle)
+              initialize();
+
+#if DEBUG
+      debug(2,"execve(%s)\n",pathname);
+#endif
+
+        /* We were asked to work in "real" mode */
+      if( !(__instw.gstatus & INSTW_INITIALIZED) ||
+          !(__instw.gstatus & INSTW_OKWRAP) ) {
+              result=true_execve(pathname,argv,envp);
+              return result;
+      }
+
+      instw_new(&instw);
+      instw_setpath(&instw,pathname);
+
+#if DEBUG
+      instw_print(&instw);
+#endif
+
+        instw_getstatus(&instw,&status);
+        if(status&INSTW_TRANSLATED)
+              result=true_execve(instw.translpath,argv,envp);
+      else
+              result=true_execve(instw.path,argv,envp);
+      
+      instw_delete(&instw);
+      return result;
 }
 
 #if(GLIBC_MINOR >= 1)
@@ -3319,7 +3358,7 @@ int creat64(const char *pathname, __mode_t mode) {
 	instw_apply(&instw);
 
 	result=true_open64(instw.translpath,O_CREAT | O_WRONLY | O_TRUNC, mode);
-	log("%d\tcreat\t%s\t#%s\n",result,instw.reslvpath,error(result));
+	logg("%d\tcreat\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
 	instw_delete(&instw);
 
@@ -3339,7 +3378,7 @@ int ftruncate64(int fd, __off64_t length) {
 #endif
 
 	result = true_ftruncate64(fd, length);
-	log("%d\tftruncate\t%d\t%d\t#%s\n",result,fd,(int)length,error(result));
+	logg("%d\tftruncate\t%d\t%d\t#%s\n",result,fd,(int)length,error(result));
 	return result;
 }
 
@@ -3387,7 +3426,7 @@ FILE *fopen64(const char *pathname, const char *mode) {
 	}
 
 	if(mode[0]=='w'||mode[0]=='a'||mode[1]=='+') 
-		log("%" PRIdPTR "\tfopen64\t%s\t#%s\n",(intptr_t)result,
+		logg("%" PRIdPTR "\tfopen64\t%s\t#%s\n",(intptr_t)result,
 		    instw.reslvpath,error(result));
 
 	instw_delete(&instw);
@@ -3446,7 +3485,7 @@ int open64(const char *pathname, int flags, ...) {
 	}
 	
 	if(flags & (O_WRONLY | O_RDWR)) 
-		log("%d\topen\t%s\t#%s\n",result,
+		logg("%d\topen\t%s\t#%s\n",result,
 		    instw.reslvpath,error(result));
 
 	instw_delete(&instw);
@@ -3617,7 +3656,7 @@ int truncate64(const char *path, __off64_t length) {
 
 	result=true_truncate64(instw.translpath,length);
 	
-	log("%d\ttruncate\t%s\t%d\t#%s\n",result,
+	logg("%d\ttruncate\t%s\t%d\t#%s\n",result,
 	    instw.reslvpath,(int)length,error(result));
 
 	instw_delete(&instw);
