@@ -131,6 +131,7 @@ static int (*true_truncate64)(const char *, __off64_t);
 #if (GLIBC_MINOR >= 4)
 static int (*true_openat)(int, const char *, int, ...);
 static int (*true_fchmodat)(int, const char *, mode_t, int);
+static int (*true_fchownat)(int, const char *, uid_t, gid_t, int);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -368,6 +369,7 @@ static void initialize(void) {
 
 	true_openat      = dlsym(libc_handle, "openat");
 	true_fchmodat      = dlsym(libc_handle, "fchmodat");
+	true_fchownat      = dlsym(libc_handle, "fchownat");
 
 #endif
 
@@ -3927,6 +3929,58 @@ int fchmodat (int dirfd, const char *path, mode_t mode, int flag) {
 #endif
  	
  	result=chmod(instw.path,mode);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+
+int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, mode);
+		 #endif
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lchwon() behaviour, according to fchownat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return lchown(path, owner, group); 
+		 }
+		 else {
+		    return chown(path, owner, group);
+		 }
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2,"fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, mode);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_chown(path, owner, group);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=chown(instw.path, owner, group);
  	
  	instw_delete(&instw);
  
