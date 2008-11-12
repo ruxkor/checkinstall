@@ -222,6 +222,7 @@ typedef struct instw_t {
 static instw_t __instw;
 
 static int canonicalize(const char *,char *);
+static int reduce(char *);
 static int make_path(const char *);
 static int copy_path(const char *,const char *);
 static inline int path_excluded(const char *);
@@ -537,6 +538,85 @@ static int canonicalize(const char *path, char *resolved_path) {
 
 	return 0;
 } 
+
+/*
+ * procedure = / rc:=reduce(path) /
+ *
+ * task      = /   reduces all occurences of "..", ".", and extra "/" in path.
+ *
+ * inputs    = / path               The modifiable string containing the path
+ * outputs   = / path               The reduced path.
+ *
+ * returns   = /  0 ok. path reduced
+ *               -1 failed. cf errno /
+ * note      = /
+ *      --Very similar to canonicalize()/realpath() except we don’t do link-
+ *      expansion
+ *      --This is purely a string manipulation function (i.e., no verification
+ *      of a path’s validity occurs).
+ *      --Additionally, we try to do reduction “in-place” since the ending
+ *      path is shorter than the beginning path.
+ *      --Also, we want only absolute paths (other paths will throw an error)
+ * /
+ */
+static int reduce(char *path) {
+	int len;
+	char *off;
+
+	if(path == NULL || *path != '/') {
+		errno = EINVAL;
+		return -1;
+	}
+
+	len = strlen(path);
+
+	/* First, get rid of double / */
+	if((off = strstr(path, "//"))) {
+		memmove(off, off+1, len - (off-path));
+		return reduce(path);
+	}
+
+	/* Then, worry about /./  */
+	if((off = strstr(path, "/./"))) {
+		memmove(off, off+2, len - 1 - (off-path));
+		return reduce(path);
+	}
+	
+	/* Finally, do /../ */
+	if((off = strstr(path, "/../"))) {
+		char *off2 = off;
+		if(off2++ != path)
+			while((--off2)[-1] != '/');
+		memmove(off2, off+4, len - 3 - (off-path));
+		return reduce(path);
+	}
+
+	/* Beautify ending */
+	switch(path[len - 1]) {
+		case '.':
+			switch(path[len - 2]) {
+				default:
+					return 0;
+				case '.':
+					if(len != 3) {
+						off = path+len-3;
+						if(*off-- != '/')
+							return 0;
+						while(*--off != '/');
+						off[1] = 0;
+						return reduce(path);
+					}
+				case '/': ;
+			}
+		case '/':
+			if(len != 1) {
+				path[len-1] = 0;
+				return reduce(path);
+			}
+		default:
+			return 0;
+	}
+}
 
 static int make_path (const char *path) {
 	char checkdir[BUFSIZ];
@@ -1461,6 +1541,7 @@ static int instw_setpath(instw_t *instw,const char *path) {
 		}
 		strcat(instw->truepath,instw->path);
 	} else {
+		reduce(instw->path);
 		strcpy(instw->truepath,instw->path);
 	}
 	relen=strlen(instw->truepath);
