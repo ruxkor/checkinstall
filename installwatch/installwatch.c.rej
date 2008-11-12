@@ -1,57 +1,17 @@
 ***************
-*** 3649,3651 ****
-  }
+*** 675,681 ****
+  	int truefd;
+  	int translfd;
+  	struct utimbuf timbuf;
+- 	ssize_t truesz;
+  	char linkpath[PATH_MAX+1];
+  	size_t linksz;
   
-  #endif /* GLIBC_MINOR >= 1 */
---- 3715,3765 ----
-  }
+--- 679,685 ----
+  	int truefd;
+  	int translfd;
+  	struct utimbuf timbuf;
++ 	size_t truesz;
+  	char linkpath[PATH_MAX+1];
+  	size_t linksz;
   
-  #endif /* GLIBC_MINOR >= 1 */
-+ 
-+ #if (GLIBC_MINOR >= 4)
-+  
-+ int openat (int dirfd, const char *path, int flags, ...) {
-+  	mode_t mode = 0;
-+  	va_list arg;
-+  	if(flags & O_CREAT) {
-+  		va_start(arg, flags);
-+  		mode = va_arg(arg, mode_t);
-+  		va_end (arg);
-+  	}
-+  	
-+  	int result;
-+  	instw_t instw;
-+  
-+  	/* If all we are doing is normal open, forgo refcounting, etc. */
-+          if(dirfd == AT_FDCWD || *path == '/')
-+                  return open(path, flags, mode);
-+  
-+  	REFCOUNT;
-+  
-+  	if (!libc_handle)
-+  		initialize();
-+  
-+ #if DEBUG
-+  	debug(2, "openat(%d, %s, 0x%x, 0%o)\n", dirfd, path, flags, mode);
-+ #endif
-+  	
-+  	/* We were asked to work in "real" mode */
-+  	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
-+  	   !(__instw.gstatus & INSTW_OKWRAP))
-+  		return true_open(path,flags,mode);
-+ 	
-+  	instw_new(&instw);
-+  	instw_setpathrel(&instw,dirfd,path);
-+  	
-+ #if DEBUG
-+  	instw_print(&instw);
-+ #endif
-+  	
-+  	result=open(instw.path,flags,mode);
-+  	
-+  	instw_delete(&instw);
-+  
-+ 	return result;
-+ }
-+  
-+ #endif /* GLIBC_MINOR >= 4 */

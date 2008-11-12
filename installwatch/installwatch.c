@@ -88,7 +88,11 @@ static int (*true_xmknod)(int ver,const char *, mode_t, dev_t *);
 static int (*true_open)(const char *, int, ...);
 static DIR *(*true_opendir)(const char *);
 static struct dirent *(*true_readdir)(DIR *dir);
+#if (GLIBC_MINOR <= 4)
+static int (*true_readlink)(const char*,char *,size_t);
+#else
 static ssize_t (*true_readlink)(const char*,char *,size_t);
+#endif
 static char *(*true_realpath)(const char *,char *);
 static int (*true_rename)(const char *, const char *);
 static int (*true_rmdir)(const char *);
@@ -878,7 +882,7 @@ int expand_path(string_t **list,const char *prefix,const char *suffix) {
 	char nwork[PATH_MAX+1];
 	char nsuffix[PATH_MAX+1];
 	char lnkpath[PATH_MAX+1];
-	ssize_t lnksz=0;
+	size_t lnksz=0;
 	string_t *pthis=NULL;
 	string_t *list1=NULL;
 	string_t *list2=NULL;
@@ -1772,7 +1776,7 @@ static int instw_apply(instw_t *instw) {
 	struct stat reslvinfo;
 	instw_t iw;
 	char wpath[PATH_MAX+1];
-	ssize_t wsz=0;
+	size_t wsz=0;
 	char linkpath[PATH_MAX+1];
 
 
@@ -1868,7 +1872,7 @@ static int instw_filldirls(instw_t *instw) {
 	struct stat sinfo;
 	struct stat dinfo;
 	int wfd;
-	ssize_t wsz;
+	size_t wsz;
 	instw_t iw_entry;
 	int status=0;
 
@@ -2888,8 +2892,13 @@ struct dirent *readdir(DIR *dir) {
 	return result;
 }
 
+#if (GLIBC_MINOR <= 4)
+int readlink(const char *path,char *buf,size_t bufsiz) {
+	int result;
+#else
 ssize_t readlink(const char *path,char *buf,size_t bufsiz) {
 	ssize_t result;
+#endif
 	instw_t instw;
 	int status;
 
