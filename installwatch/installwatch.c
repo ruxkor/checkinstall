@@ -1422,7 +1422,7 @@ static int instw_setmetatransl(instw_t *instw) {
  */
 static int instw_setpath(instw_t *instw,const char *path) {
 	size_t relen;
-	size_t trlen;
+	size_t trlen = 0;
 	size_t melen;
 
 #if DEBUG
