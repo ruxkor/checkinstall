@@ -104,6 +104,7 @@ static int (*true_utime)(const char *,const struct utimbuf *);
 static int (*true_utimes)(const char *,const struct timeval *);
 static int (*true_setxattr)(const char *,const char *,const void *,
                             size_t, int);
+static int (*true_removexattr)(const char *,const char *);
 static int (*true_access)(const char *, int);
 
 #if(GLIBC_MINOR >= 1)
@@ -345,6 +346,7 @@ static void initialize(void) {
 	true_xstat64     = dlsym(libc_handle, "__xstat64");
 	true_lxstat64    = dlsym(libc_handle, "__lxstat64");
 	true_truncate64  = dlsym(libc_handle, "truncate64");
+        true_removexattr = dlsym(libc_handle, "removexattr");
 #endif
 
 	if(instw_init()) exit(-1);
@@ -3238,6 +3240,45 @@ int setxattr (const char *pathname, const char *name,
 
         result=true_setxattr(instw.translpath,name,value,size,flags);
         log("%d\tsetxattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
+
+        instw_delete(&instw);
+
+        return result;
+}
+
+int removexattr (const char *pathname, const char *name)
+{
+        int result;
+        instw_t instw;
+
+        REFCOUNT;
+
+        if (!libc_handle)
+               initialize();
+
+#if DEBUG
+        debug(2,"removexattr(%s,%s)\n",pathname,name);
+#endif
+
+         /* We were asked to work in "real" mode */
+        if( !(__instw.gstatus & INSTW_INITIALIZED) ||
+            !(__instw.gstatus & INSTW_OKWRAP) ) {
+                result=true_removexattr(pathname,name);
+                return result;
+        }
+
+        instw_new(&instw);
+        instw_setpath(&instw,pathname);
+
+#if DEBUG
+        instw_print(&instw);
+#endif
+
+        backup(instw.truepath);
+        instw_apply(&instw);
+
+        result=true_removexattr(instw.translpath,name);
+        log("%d\tremovexattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
 
         instw_delete(&instw);
 
