@@ -3567,10 +3567,10 @@ FILE *fopen64(const char *pathname, const char *mode) {
 	instw_getstatus(&instw,&status);
 	
 	if(status&INSTW_TRANSLATED) {
-		debug(4,"\teffective fopen64(%s)",instw.translpath);
+		debug(4,"\teffective fopen64(%s)\n",instw.translpath);
 		result=true_fopen64(instw.translpath,mode); 
 	} else {
-		debug(4,"\teffective fopen64(%s)",instw.path);
+		debug(4,"\teffective fopen64(%s)\n",instw.path);
 		result=true_fopen64(instw.path,mode);
 	}
 
@@ -3626,10 +3626,10 @@ int open64(const char *pathname, int flags, ...) {
 	instw_getstatus(&instw,&status);
 
 	if(status&INSTW_TRANSLATED) {
-		debug(4,"\teffective open64(%s)",instw.translpath);
+		debug(4,"\teffective open64(%s)\n",instw.translpath);
 		result=true_open64(instw.translpath,flags,mode);
 	} else {
-		debug(4,"\teffective open64(%s)",instw.path);
+		debug(4,"\teffective open64(%s)\n",instw.path);
 		result=true_open64(instw.path,flags,mode);
 	}
 	
