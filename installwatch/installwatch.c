@@ -1547,7 +1547,10 @@ static int instw_setpath(instw_t *instw,const char *path) {
 		strcpy(instw->truepath,instw->path);
 	}
 	relen=strlen(instw->truepath);
-
+	
+	/* remove relative elements from the truepath */
+	reduce(instw->truepath);
+	
 	  /* 
 	   *   if library is not completely initialized, or if translation 
 	   * is not active, we make things so it is equivalent to the
