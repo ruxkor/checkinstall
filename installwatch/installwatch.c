@@ -124,6 +124,10 @@ static int (*true_truncate64)(const char *, __off64_t);
 
 #endif
 
+#if (GLIBC_MINOR >= 4)
+static int (*true_openat)(int, const char *, int, ...);
+#endif
+
 #if defined __GNUC__ && __GNUC__>=2
 	#define inline inline
 #else
@@ -251,6 +255,9 @@ static int instw_delete(instw_t *);
 static int instw_setmetatransl(instw_t *);
 
 static int instw_setpath(instw_t *,const char *);
+#if (GLIBC_MINOR >= 4)
+static int instw_setpathrel(instw_t *, int, const char *);
+#endif
 static int instw_getstatus(instw_t *,int *);
 static int instw_apply(instw_t *);
 static int instw_filldirls(instw_t *);
@@ -349,6 +356,12 @@ static void initialize(void) {
 	true_truncate64  = dlsym(libc_handle, "truncate64");
         true_removexattr = dlsym(libc_handle, "removexattr");
 	true_execve      = dlsym(libc_handle, "execve");
+#endif
+
+#if (GLIBC_MINOR >= 4)
+
+	true_openat      = dlsym(libc_handle, "openat");
+
 #endif
 
 	if(instw_init()) exit(-1);
@@ -1515,6 +1528,59 @@ static int instw_setpath(instw_t *instw,const char *path) {
 
 	return 0;
 }
+
+/*
+ * procedure = / rc:=instw_setpathrel(instw,dirfd,relpath) /
+ *
+ * task      = /   sets the 'instw->path' field and updates all the fields that
+ *               can be deduced from 'path', such as 'instw->translpath'. Much
+ *               like instw_setpath, except for paths relative to a dirfd. /
+ *
+ * inputs    = / dirfd              An open file descriptor to a directory
+ *               relpath            The given path relative to dirfd, as is
+ * outputs   = / instw->path        The full absolute (non-relative) path
+ *               instw->truepath    The given path, canonicalized
+ *               instw->translpath  The real translated path 
+ *               instw->mtranslpath The translation status path  /
+ *
+ * returns   = /  0 ok. path set
+ *               -1 failed. cf errno /
+ */
+#if (GLIBC_MINOR >= 4)
+static int instw_setpathrel(instw_t *instw, int dirfd, const char *relpath) {
+
+/* This constant should be large enough to make a string that holds
+ * /proc/self/fd/xxxxx  if you have an open fd with more than five digits,
+ * something is seriously messed up.
+ */
+#define PROC_PATH_LEN 20
+	
+	debug(2,"instw_setpathrel(%p,%d,%s)\n",instw,dirfd,relpath);
+	int retval = -1, l;
+	char *newpath;
+	char proc_path[PROC_PATH_LEN];
+	struct stat s;
+
+	snprintf(proc_path, PROC_PATH_LEN, "/proc/self/fd/%d", dirfd);
+	if(true_stat(proc_path, &s) == -1)
+		goto out;
+	if(!(newpath = malloc(s.st_size+strlen(relpath)+2)))
+		goto out;
+	if((l = true_readlink(proc_path, newpath, s.st_size)) == -1)
+		goto free_out;
+	newpath[l] = '/';
+	strcpy(newpath + l + 1, relpath);
+	
+	retval = instw_setpath(instw, newpath);
+
+free_out:
+	free(newpath);
+out:
+	return retval;
+
+#undef PROC_PATH_LEN
+}
+#endif
 
 /*
  * procedure = / rc:=instw_getstatus(instw,status) /
@@ -3666,3 +3732,52 @@ int truncate64(const char *path, __off64_t length) {
 
 #endif /* GLIBC_MINOR >= 1 */
 
+
+
+#if (GLIBC_MINOR >= 4)
+ 
+int openat (int dirfd, const char *path, int flags, ...) {
+ 	mode_t mode = 0;
+ 	va_list arg;
+ 	if(flags & O_CREAT) {
+ 		va_start(arg, flags);
+ 		mode = va_arg(arg, mode_t);
+ 		va_end (arg);
+ 	}
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+                 return open(path, flags, mode);
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+ 	debug(2, "openat(%d, %s, 0x%x, 0%o)\n", dirfd, path, flags, mode);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_open(path,flags,mode);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=open(instw.path,flags,mode);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+ 
+#endif /* GLIBC_MINOR >= 4 */
