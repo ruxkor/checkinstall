@@ -1,9 +1,9 @@
 #!/bin/bash
-#$Id: installwatch,v 0.7.0.6 2008/11/09 07:54:37 izto Exp $
+#$Id: installwatch,v 0.6.7.0 2007/12/04 07:35:04 gna Exp $
 
 #set -x
 
-PREFIX=#PREFIX#
+PREFIX=${PREFIX:-#PREFIX#}
 
 HACK="PREFIX"
 HACK="#$HACK#";
@@ -14,12 +14,24 @@ if test "$PREFIX" = "$HACK" ; then
 	exit 1
 fi
 
-LIBDIR=$PREFIX/lib
-
-BASE_TMP_DIR=/var/tmp
-
+LIBDIR=$DESTDIR$PREFIX/lib
+LIB64_PLATFORM=false
+case `uname -m` in
+    x86_64|ppc64|s390x)
+	LIB64_PLATFORM=true
+	;;
+esac
+if test -d $PREFIX/lib64 && test "$LIB64_PLATFORM" = "true" ; then
+	LIBDIR=$PREFIX/lib64
+else
+	LIBDIR=$PREFIX/lib
+fi
+  
+BASE_TMP_DIR=/tmp
+  
 INSTALLWATCH_VERSION=0.7.0beta7
-
+  
+ 
 #
 # ##############################################################################
 #
