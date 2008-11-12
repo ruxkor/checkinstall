@@ -65,6 +65,21 @@ if test "$VERSION" = 'libc.so.6' ; then
 		2)
 			echo '#define GLIBC_MINOR 2' >> $OUTFILE
 			SUBVERSION='glibc-2.2' ;;
+		3)
+			echo '#define GLIBC_MINOR 3' >> $OUTFILE
+			SUBVERSION='glibc-2.3' ;;
+		4)
+			echo '#define GLIBC_MINOR 4' >> $OUTFILE
+			SUBVERSION='glibc-2.4' ;;
+		5)
+			echo '#define GLIBC_MINOR 5' >> $OUTFILE
+			SUBVERSION='glibc-2.5' ;;
+		6)
+			echo '#define GLIBC_MINOR 6' >> $OUTFILE
+			SUBVERSION='glibc-2.6' ;;
+		7)
+			echo '#define GLIBC_MINOR 7' >> $OUTFILE
+			SUBVERSION='glibc-2.7' ;;
 		*)
 			echo 'Treated as glibc >= 2.1 (finger crossed)'
 			echo '#define GLIBC_MINOR 1' >> $OUTFILE
