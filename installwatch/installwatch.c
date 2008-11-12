@@ -1064,7 +1064,7 @@ static int instw_init(void) {
 			
 				if((strlen(__instw.root)+strlen(_BACKUP))>PATH_MAX) {
 					fprintf(stderr,
-						"Backup path would exceed PATH_MAX. abending.\n");
+						"Backup path would exceed PATH_MAX. Aborting.\n");
 					return -1;	
 				}
 				__instw.backup=malloc(strlen(__instw.root)+strlen(_BACKUP)+1);
@@ -1094,7 +1094,7 @@ static int instw_init(void) {
 		
 				if((strlen(__instw.root)+strlen(_TRANSL))>PATH_MAX) {
 					fprintf(stderr,
-						"Transl path would exceed PATH_MAX. abending.\n");
+						"Transl path would exceed PATH_MAX. Aborting.\n");
 					return -1;	
 				}
 				__instw.transl=malloc(strlen(__instw.root)+strlen(_TRANSL)+1);
@@ -1107,7 +1107,7 @@ static int instw_init(void) {
 			
 				if((strlen(__instw.root)+strlen(_META))>PATH_MAX) {
 					fprintf(stderr,
-						"Meta path would exceed PATH_MAX. abending.\n");
+						"Meta path would exceed PATH_MAX. Aborting.\n");
 					return -1;	
 				}
 				
@@ -2020,14 +2020,14 @@ static int backup(const char *path) {
 
 	if (true_stat (backup_path, &backup_inode) >= 0) {
 		#if DEBUG
-		debug(3,"%s must not be backed up\n", backup_path);
+		debug(3,"%s should not be backed up\n", backup_path);
 		#endif
 		return 0;
 	}
 
 
 	#if DEBUG
-	debug(3,"Si existe, veamos de que tipo es.\n");
+	debug(3,"Exists in real path. Lets see what it is.\n");
 	#endif
 
 	/* Append the path to the backup_path */
@@ -2089,7 +2089,7 @@ int chdir(const char *pathname) {
 		initialize();
 
 #if DEBUG
-	debug(2,"chdir(%s)n",pathname);
+	debug(2,"chdir(%s)\n",pathname);
 #endif
 
 	  /* We were asked to work in "real" mode */
