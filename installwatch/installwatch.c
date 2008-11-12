@@ -110,7 +110,6 @@ static int (*true_access)(const char *, int);
 static int (*true_setxattr)(const char *,const char *,const void *,
                             size_t, int);
 static int (*true_removexattr)(const char *,const char *);
-static int (*true_execve)(const char *,char *const*,char *const*);
 
 #if(GLIBC_MINOR >= 1)
 
@@ -362,7 +361,6 @@ static void initialize(void) {
 	true_lxstat64    = dlsym(libc_handle, "__lxstat64");
 	true_truncate64  = dlsym(libc_handle, "truncate64");
         true_removexattr = dlsym(libc_handle, "removexattr");
-	true_execve      = dlsym(libc_handle, "execve");
 #endif
 
 #if (GLIBC_MINOR >= 4)
@@ -3448,43 +3446,6 @@ int removexattr (const char *pathname, const char *name)
         instw_delete(&instw);
 
         return result;
-}
-
-int execve(const char *pathname, char *const argv[], char *const envp[])
-{
-      int result;
-      instw_t instw;
-      int status;
-      
-      if (!libc_handle)
-              initialize();
-
-#if DEBUG
-      debug(2,"execve(%s)\n",pathname);
-#endif
-
-        /* We were asked to work in "real" mode */
-      if( !(__instw.gstatus & INSTW_INITIALIZED) ||
-          !(__instw.gstatus & INSTW_OKWRAP) ) {
-              result=true_execve(pathname,argv,envp);
-              return result;
-      }
-
-      instw_new(&instw);
-      instw_setpath(&instw,pathname);
-
-#if DEBUG
-      instw_print(&instw);
-#endif
-
-        instw_getstatus(&instw,&status);
-        if(status&INSTW_TRANSLATED)
-              result=true_execve(instw.translpath,argv,envp);
-      else
-              result=true_execve(instw.path,argv,envp);
-      
-      instw_delete(&instw);
-      return result;
 }
 
 #if(GLIBC_MINOR >= 1)
