@@ -102,6 +102,8 @@ static int (*true_truncate)(const char *, TRUNCATE_T);
 static int (*true_unlink)(const char *);
 static int (*true_utime)(const char *,const struct utimbuf *);
 static int (*true_utimes)(const char *,const struct timeval *);
+static int (*true_setxattr)(const char *,const char *,const void *,
+                            size_t, int);
 static int (*true_access)(const char *, int);
 
 #if(GLIBC_MINOR >= 1)
@@ -327,6 +329,7 @@ static void initialize(void) {
 	true_truncate    = dlsym(libc_handle, "truncate");
 	true_unlink      = dlsym(libc_handle, "unlink");
 	true_utime       = dlsym(libc_handle, "utime");
+	true_setxattr    = dlsym(libc_handle, "setxattr");
         true_utimes      = dlsym(libc_handle, "utimes");
         true_access      = dlsym(libc_handle, "access");
 
@@ -3198,6 +3201,47 @@ int access (const char *pathname, int type) {
        instw_delete(&instw);
 
        return result;
+}
+
+int setxattr (const char *pathname, const char *name,
+              const void *value, size_t size, int flags)
+{
+        int result;
+        instw_t instw;
+
+        REFCOUNT;
+
+        if (!libc_handle)
+               initialize();
+
+#if DEBUG
+        debug(2,"setxattr(%s,%s)\n",pathname,name);
+#endif
+
+         /* We were asked to work in "real" mode */
+        if( !(__instw.gstatus & INSTW_INITIALIZED) ||
+           !(__instw.gstatus & INSTW_OKWRAP) ) {
+               result=true_setxattr(pathname,name,
+                       value,size,flags);
+               return result;
+        }
+
+        instw_new(&instw);
+        instw_setpath(&instw,pathname);
+
+#if DEBUG
+        instw_print(&instw);
+#endif
+
+        backup(instw.truepath);
+        instw_apply(&instw);
+
+        result=true_setxattr(instw.translpath,name,value,size,flags);
+        log("%d\tsetxattr\t%s\t#%s\n",result,instw.reslvpath,error(result));
+
+        instw_delete(&instw);
+
+        return result;
 }
 
 #if(GLIBC_MINOR >= 1)
