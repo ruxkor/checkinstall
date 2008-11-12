@@ -3905,7 +3905,7 @@ int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
          if(dirfd == AT_FDCWD || *path == '/')
 		{
 		 #if DEBUG
-			debug(2, "fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, mode);
+			debug(2, "fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, flags);
 		 #endif
 
 		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
@@ -3926,7 +3926,7 @@ int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
  		initialize();
  
 #if DEBUG
-	debug(2,"fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, mode);
+	debug(2,"fchownat(%d,%s,%d,%d,0%o)\n", dirfd, path, owner, group, flags);
 #endif
  	
  	/* We were asked to work in "real" mode */

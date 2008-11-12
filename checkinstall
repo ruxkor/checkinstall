@@ -288,12 +288,16 @@ function cleanup {
  restore_backup
  echogn "Cleaning up..."
  cd "$DIRECTORIO_FUENTE"
- [ -n "${TMP_DIR}" ] && [ -d ${TMP_DIR} ] && rm -rf ${TMP_DIR}
  [ -n "${BUILDROOT}" ] && [ -d ${BUILDROOT} ] && rm -rf "${BUILDROOT}"
+ if [ "$DEBUG" -eq 0 ]; then
+    [ -n "${TMP_DIR}" ] && [ -d ${TMP_DIR} ] && rm -rf ${TMP_DIR}
+    rm -f checkinstall-debug*
+ else
+    echogn "(Debugging mode on, KEEPING temp dir $TMP_DIR)..."
+ fi
  [ -n "${RPMSOURCEDIR}" ] &&
    [ -f "${RPMSOURCEDIR}/SOURCES/${PKG_BASENAME}.tgz" ] &&
    rm -f "${RPMSOURCEDIR}/SOURCES/${PKG_BASENAME}.tgz"
- rm -f checkinstall-debug*
 
  # If we had a pre-existing postinstall-pak, we keep it as it was.
  if [ -f ${DIRECTORIO_FUENTE}/postinstall-pak.tmp ]; then
