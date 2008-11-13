@@ -2540,10 +2540,10 @@ FILE *fopen(const char *pathname, const char *mode) {
 	instw_getstatus(&instw,&status);
 	
 	if(status&INSTW_TRANSLATED) {
-		debug(4,"\teffective fopen(%s)",instw.translpath);
+		debug(4,"\teffective fopen(%s)\n",instw.translpath);
 		result=true_fopen(instw.translpath,mode); 
 	} else {
-		debug(4,"\teffective fopen(%s)",instw.path);
+		debug(4,"\teffective fopen(%s)\n",instw.path);
 		result=true_fopen(instw.path,mode);
 	}
 	
