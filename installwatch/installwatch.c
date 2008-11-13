@@ -131,6 +131,8 @@ static int (*true_truncate64)(const char *, __off64_t);
 static int (*true_openat)(int, const char *, int, ...);
 static int (*true_fchmodat)(int, const char *, mode_t, int);
 static int (*true_fchownat)(int, const char *, uid_t, gid_t, int);
+static int (*true_fxstatat)(int, int, const char *, struct stat *, int);
+static int (*true_fxstatat64)(int, int, const char *, struct stat64 *, int);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -150,6 +152,17 @@ static inline int true_mknod(const char *pathname,mode_t mode,dev_t dev) {
 static inline int true_lstat(const char *pathname,struct stat *info) {
 	return true_lxstat(_STAT_VER,pathname,info);
 }
+
+#if (GLIBC_MINOR >= 4)
+static inline int true_fstatat(int dirfd, const char *pathname, struct stat *info, int flags) {
+	return true_fxstatat(_STAT_VER, dirfd, pathname, info, flags);
+}
+
+static inline int true_fstatat64(int dirfd, const char *pathname, struct stat64 *info, int flags) {
+	return true_fxstatat64(_STAT_VER, dirfd, pathname, info, flags);
+}
+
+#endif
 
   /* A few defines to fix things a little */
 #define INSTW_OK 0 
@@ -368,6 +381,8 @@ static void initialize(void) {
 	true_openat      = dlsym(libc_handle, "openat");
 	true_fchmodat      = dlsym(libc_handle, "fchmodat");
 	true_fchownat      = dlsym(libc_handle, "fchownat");
+	true_fxstatat      = dlsym(libc_handle, "__fxstatat");
+	true_fxstatat64      = dlsym(libc_handle, "__fxstatat64");
 
 #endif
 
@@ -2384,6 +2399,13 @@ int chown(const char *path, uid_t owner, gid_t group) {
 	return result;
 }
 
+
+int chown32(const char *path, uid_t owner, gid_t group) {
+
+   return chown(path, owner, group);
+
+}
+
 int chroot(const char *path) {
 	int result;
 	char canonic[MAXPATHLEN];
@@ -3946,6 +3968,112 @@ int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
  	instw_delete(&instw);
  
 	return result;
+}
+
+
+int __fxstatat (int version, int dirfd, const char *path, struct stat *s, int flags) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "__fxstatat(%d,%s,%p,0%o)\n", dirfd, path, s, flags);
+		 #endif
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lstat() behaviour, according to fstatat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return __lxstat(version, path, s); 
+		 }
+		 else {
+		    return __xstat(version, path, s);
+		 }
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "__fxstatat(%d,%s,%p,0%o)\n", dirfd, path, s, flags);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_xstat(version, path, s);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=__xstat(version, instw.path, s);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+
+int __fxstatat64 (int version, int dirfd, const char *path, struct stat64 *s, int flags) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "__fxstatat(%d,%s,%p,0%o)\n", dirfd, path, s, flags);
+		 #endif
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lstat() behaviour, according to fstatat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return __lxstat64(version, path, s); 
+		 }
+		 else {
+		    return __xstat64(version, path, s);
+		 }
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "__fxstatat(%d,%s,%p,0%o)\n", dirfd, path, s, flags);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_xstat64(version, path, s);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=__xstat64(version, instw.path, s);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+
 }
 
 #endif /* GLIBC_MINOR >= 4 */
