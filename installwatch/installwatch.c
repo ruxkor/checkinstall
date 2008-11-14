@@ -3977,8 +3977,18 @@ int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
  	
  	/* We were asked to work in "real" mode */
  	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
- 	   !(__instw.gstatus & INSTW_OKWRAP))
- 		return true_chown(path, owner, group);
+ 	   !(__instw.gstatus & INSTW_OKWRAP)) {
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lchwon() behaviour, according to fchownat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return true_lchown(path, owner, group); 
+		 }
+		 else {
+		    return true_chown(path, owner, group);
+		 }
+ 	}
 	
  	instw_new(&instw);
  	instw_setpathrel(&instw,dirfd,path);
@@ -3986,8 +3996,17 @@ int fchownat (int dirfd, const char *path,uid_t owner,gid_t group,int flags) {
 #if DEBUG
  	instw_print(&instw);
 #endif
- 	
- 	result=chown(instw.path, owner, group);
+	 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+	 /* lchwon() behaviour, according to fchownat(2) */
+
+	 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+	    result=lchown(instw.path, owner, group); 
+	 }
+	 else {
+ 	    result=chown(instw.path, owner, group);
+	 }
+
+
  	
  	instw_delete(&instw);
  
@@ -4030,8 +4049,20 @@ int __fxstatat (int version, int dirfd, const char *path, struct stat *s, int fl
  	
  	/* We were asked to work in "real" mode */
  	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
- 	   !(__instw.gstatus & INSTW_OKWRAP))
- 		return true_xstat(version, path, s);
+ 	   !(__instw.gstatus & INSTW_OKWRAP)) {
+
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lstat() behaviour, according to fstatat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return true_lxstat(version, path, s); 
+		 }
+		 else {
+ 		    return true_xstat(version, path, s);
+		 }
+	}
+
 	
  	instw_new(&instw);
  	instw_setpathrel(&instw,dirfd,path);
@@ -4039,8 +4070,17 @@ int __fxstatat (int version, int dirfd, const char *path, struct stat *s, int fl
 #if DEBUG
  	instw_print(&instw);
 #endif
- 	
- 	result=__xstat(version, instw.path, s);
+ 
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lstat() behaviour, according to fstatat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+ 		    result=__lxstat(version, instw.path, s);
+		 }
+		 else {
+ 		    result=__xstat(version, instw.path, s);
+ 		    
+		 }	
  	
  	instw_delete(&instw);
  
@@ -4082,8 +4122,19 @@ int __fxstatat64 (int version, int dirfd, const char *path, struct stat64 *s, in
  	
  	/* We were asked to work in "real" mode */
  	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
- 	   !(__instw.gstatus & INSTW_OKWRAP))
- 		return true_xstat64(version, path, s);
+ 	   !(__instw.gstatus & INSTW_OKWRAP)) {
+
+		 /* If we have AT_SYMLINK_NOFOLLOW then we need  */
+		 /* lstat() behaviour, according to fstatat(2) */
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return true_lxstat64(version, path, s); 
+		 }
+		 else {
+ 		    return true_xstat64(version, path, s);
+		 }
+	}
+
 	
  	instw_new(&instw);
  	instw_setpathrel(&instw,dirfd,path);
@@ -4091,8 +4142,16 @@ int __fxstatat64 (int version, int dirfd, const char *path, struct stat64 *s, in
 #if DEBUG
  	instw_print(&instw);
 #endif
- 	
- 	result=__xstat64(version, instw.path, s);
+
+	/* If we have AT_SYMLINK_NOFOLLOW then we need  */
+	/* lstat() behaviour, according to fstatat(2) */
+
+	if ( flags & AT_SYMLINK_NOFOLLOW ) {
+ 	   result=__lxstat64(version, instw.path, s);
+	}
+	else {
+ 	   result=__xstat64(version, instw.path, s);
+	}
  	
  	instw_delete(&instw);
  
