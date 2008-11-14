@@ -134,6 +134,7 @@ static int (*true_fchownat)(int, const char *, uid_t, gid_t, int);
 static int (*true_fxstatat)(int, int, const char *, struct stat *, int);
 static int (*true_fxstatat64)(int, int, const char *, struct stat64 *, int);
 static int (*true_linkat)(int, const char *, int, const char *, int);
+static int (*true_mkdirat)(int, const char *, mode_t);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -385,6 +386,7 @@ static void initialize(void) {
 	true_fxstatat      = dlsym(libc_handle, "__fxstatat");
 	true_fxstatat64      = dlsym(libc_handle, "__fxstatat64");
 	true_linkat      = dlsym(libc_handle, "linkat");
+	true_mkdirat      = dlsym(libc_handle, "mkdirat");
 
 #endif
 
@@ -4100,13 +4102,15 @@ int linkat (int olddirfd, const char *oldpath,
 			debug(2, "linkat(%d, %s, %d, %s, 0%o)\n", olddirfd, oldpath, newdirfd, newpath, flags );
 		 #endif
 
+		 return link(oldpath, newpath); 
+
 /*** FIXME: If we have AT_SYMLINK_NOFOLLOW we need to dereference the links 
 
 		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
-		    return __lxstat(version, path, s); 
+		    return link(oldpath, newpath); 
 		 }
 		 else {
-		    return __xstat(version, path, s);
+		    return link(oldpath, newpath);
 		 }
 ***************************************************************** FIXME */
 
@@ -4140,6 +4144,49 @@ int linkat (int olddirfd, const char *oldpath,
  	
  	instw_delete(&instwold);
  	instw_delete(&instwnew);
+ 
+	return result;
+}
+
+
+int mkdirat (int dirfd, const char *path, mode_t mode) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "mkdirat(%d,%s,0%o)\n", dirfd, path, mode);
+		 #endif
+		 return mkdir(path, mode);
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "mkdirat(%d,%s,0%o)\n", dirfd, path, mode);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_mkdir(path,mode);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=mkdir(instw.path,mode);
+ 	
+ 	instw_delete(&instw);
  
 	return result;
 }
