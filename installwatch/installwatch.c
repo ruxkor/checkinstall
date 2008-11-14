@@ -136,6 +136,7 @@ static int (*true_fxstatat64)(int, int, const char *, struct stat64 *, int);
 static int (*true_linkat)(int, const char *, int, const char *, int);
 static int (*true_mkdirat)(int, const char *, mode_t);
 static int (*true_readlinkat)(int, const char *, char *, size_t);
+static int (*true_xmknodat)(int, int, const char *, mode_t, dev_t *);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -163,6 +164,10 @@ static inline int true_fstatat(int dirfd, const char *pathname, struct stat *inf
 
 static inline int true_fstatat64(int dirfd, const char *pathname, struct stat64 *info, int flags) {
 	return true_fxstatat64(_STAT_VER, dirfd, pathname, info, flags);
+}
+
+static inline int true_mknodat(int dirfd, const char *pathname,mode_t mode,dev_t dev) {
+	return true_xmknodat(_MKNOD_VER, dirfd, pathname, mode, &dev);
 }
 
 #endif
@@ -389,6 +394,7 @@ static void initialize(void) {
 	true_linkat      = dlsym(libc_handle, "linkat");
 	true_mkdirat      = dlsym(libc_handle, "mkdirat");
 	true_readlinkat      = dlsym(libc_handle, "readlinkat");
+	true_xmknodat      = dlsym(libc_handle, "__xmknodat");
 
 #endif
 
@@ -4236,5 +4242,49 @@ int readlinkat (int dirfd, const char *path,
  
 	return result;
 }
+
+
+int __xmknodat (int version, int dirfd,const char *path,mode_t mode,dev_t *dev) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "__xmknod(%d, %s, 0%o, %p)\n", version, path, mode, dev);
+		 #endif
+		 return __xmknod(version, path, mode, dev);
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "__xmknod(%d, %s, 0%o, %p)\n", version, path, mode, dev);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_xmknod(version, path, mode, dev);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=__xmknod(version, instw.path, mode, dev);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+
 
 #endif /* GLIBC_MINOR >= 4 */
