@@ -392,6 +392,72 @@ function shell_escape() {
 	echo
 }
 
+# Output all the parents of the files given as arguments to stdout. Remove
+# duplicates.
+function list_parents {
+    src="$*"
+    files=`for f in $src; do
+    echo "$f" | awk '
+    BEGIN{
+        FS = "/"
+    }
+    {
+        for (i=1;i<NF;i++){
+            for (j=1;j<=i;j++){
+                printf "%s",$(j)
+                if (j != i){
+                        printf "/"
+                    }
+            }
+            printf " "
+        }
+    }'
+    done`
+
+    echo "${files}"  | tr ' ' '\n' | uniq | tr '\n' ' '
+    return $?
+}
+
+# Copy some file ($1) whose path is given relatively to some root ($2) to a
+# destination ($3). If --deref-parents appear as first argument, then symlink
+# parents will not be copied as symlinks but as ordinary directories. All
+# permissions are preserved. The directories the source file was in are
+# preserved up to the root. The files that were copied are displayed on stdout
+function copy_dir_hierarchy {
+    deref_parents=0
+    if [ `echo "${1}" | egrep '^--deref-parents'` ]; then
+        deref_parents=1
+        shift
+    fi
+    src="${1}"
+    root="${2}"
+    dest="${3}"
+
+    # All directories the file is in, e.g if src is
+    # ./usr/local/lib/installwatch.so, then files will be . ./usr ./usr/local
+    # ./usr/local/lib
+    files=`list_parents ${src}`
+
+    # Only use tar if there are parents
+    echo "${files}" | egrep '[^[:space:]]' >/dev/null
+    if [ $? -eq 0 ]; then
+        if [ deref_parents -eq 1 ]; then
+            # Add the -h option to the tar command for dereferencing
+            $TAR --no-recursion -C "${root}" -cphf - $files | $TAR -f - -xvpC \
+                "${dest}"
+        else 
+            $TAR --no-recursion -C "${root}" -cpf - $files | $TAR -f - -xvpC \
+                "${dest}"
+        fi
+
+    fi
+
+    $TAR -C "${root}" -cpf - $src | $TAR -f - -xvpC \
+        "${dest}"
+
+    return $?
+}
+
 
                       #################################
                       # Function definition ends here #
@@ -1495,8 +1561,8 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	   echo
 	   echo "Copying documentation directory..."
 	   mkdir -p "${BUILD_DIR}/${DOC_DIR}/${NAME}"
-	   (cd $DIRECTORIO_FUENTE/doc-pak;$TAR -cpf - .) |
-	   (cd ${BUILD_DIR}/${DOC_DIR}/${NAME};$TAR -f - -xvp) 
+	   copy_dir_hierarchy . "$DIRECTORIO_FUENTE/doc-pak" \
+               "${BUILD_DIR}/${DOC_DIR}/${NAME}"
 	   chown -R root.root "${BUILD_DIR}/${DOC_DIR}/${NAME}"
 	fi
 	
@@ -1505,8 +1571,9 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	
 	if [ -f "${DIRECTORIO_FUENTE}/${CK_INCLUDE_FILE}" ]; then
    	   cat "${DIRECTORIO_FUENTE}/${CK_INCLUDE_FILE}" | while read include_file; do
-	      $TAR -cpf - "$include_file" 2>/dev/null | $TAR -f - -xp -C $BUILD_DIR  &> /dev/null
-	   done
+	       copy_dir_hierarchy --deref-parents "$include_file" "." "${BUILD_DIR}" &>/dev/null
+           done
+
 	fi
 
 
@@ -1520,6 +1587,13 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 
 	# symlinks are next
 	cat /${TMP_DIR}/newfiles.tmp | egrep -v '^[-0-9][0-9]*[[:space:]]*(unlink|access)' | cut -f 4 | egrep -v "^(/dev|$BASE_TMP_DIR|/tmp)" | grep -v "#success" | sort -u  >> /${TMP_DIR}/newfiles
+        # Create another list of modified files that exclude all files the
+        # install script wanted to create but did not, e.g because they already
+        # existed.
+        egrep "#success$" /${TMP_DIR}/newfiles.tmp | cut -f 3 | sort -u \
+            >/${TMP_DIR}/modified
+        egrep "#success$" /${TMP_DIR}/newfiles.tmp | cut -f 4 \
+            | egrep -v "#success" | sort -u >> /${TMP_DIR}/modified
 
 	# OK, now we clean it up a bit
 	mv /${TMP_DIR}/newfiles.tmp /${TMP_DIR}/newfiles.installwatch
@@ -1596,7 +1670,7 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	   # Check if new files were added by the user
 	   cat /${TMP_DIR}/newfiles | while read file; do 
 	      if ! [ -e "${TRANSLROOT}${file}" ]; then
-		 ($TAR -C / -cpf - ".${file}"| $TAR -f - -xvpC ${BUILD_DIR}) >> /${TMP_DIR}/updated-by-user.log 2>&1
+		  copy_dir_hierarchy --deref-parents "${file}" "/" "${BUILD_DIR}" >> /${TMP_DIR}/updated-by-user.log 2>&1
 	      fi
 	   done
 
@@ -1617,8 +1691,41 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	   fi
 	done ) > /${TMP_DIR}/newfiles-tar
 
-	cat /${TMP_DIR}/newfiles-tar | while read file; do
-	   ($TAR -C "${TRANSLROOT}" -cpf - $file | $TAR -C ${BUILD_DIR} -xpf - ) >> /${TMP_DIR}/checkinstall.log 2>&1
+        # Here it gets tricky: we need to copy all new files to our build dir,
+        # keeping permissions as they are for parents directories as well as for
+        # the files themselves. If the parents or the file are symlinks, we
+        # dereference them only if they were not modified by the installation
+        # script. 
+        NEWFILES="${TMP_DIR}/modified"
+        LOGFILE="/${TMP_DIR}/checkinstall.log"
+
+ 	cat /${TMP_DIR}/newfiles-tar | while read file; do
+            parents=`list_parents ${file} | sed s/^\.//`
+            for p in $parents; do
+            # We have to remove the ./ at the beginning
+		truep=`echo ${p} | sed s/^\.//`
+                # Parent has been modified: do _not_ dereference
+		grep "${truep}$" "${NEWFILES}" &>/dev/null
+		if [ $? -eq 0 ]; then
+                    $TAR --no-recursion -C "${TRANSLROOT}" -cpf - $p \
+			| $TAR -f - -xvpC "${BUILD_DIR}" >> $LOGFILE 2>&1
+		else
+                    # Parent wasn't touched by the install script: dereference
+                    $TAR --no-recursion -C "${TRANSLROOT}" -cphf - $p \
+			| $TAR -f - -xvpC "${BUILD_DIR}"  >> $LOGFILE 2>&1
+		fi
+            done
+            truefile=`echo ${file} | sed 's/^\.//'`
+            # No recursion here: if $file is a directory, then the files created
+            # in it will follow.
+            grep "${truefile}$" "${NEWFILES}" &>/dev/null
+            if [ $? -eq 0 ]; then
+		$TAR --no-recursion -C "${TRANSLROOT}" -cpf - $file \
+                    | $TAR -f - -xvpC "${BUILD_DIR}" >> $LOGFILE 2>&1
+            else 
+		$TAR --no-recursion -C "${TRANSLROOT}" -cphf - $file \
+                    | $TAR -f - -xvpC "${BUILD_DIR}" >> $LOGFILE 2>&1
+            fi
 	done
 
 	okfail
@@ -2634,7 +2741,11 @@ if [ $? -eq 0 ]; then
    cd ${TMP_DIR}/BACKUP
    echo
    echogn "Writing backup package..."
-   $TAR -cpf - . | gzip -9 > "${DIRECTORIO_FUENTE}/backup-`date +%m%d%Y%H%M`-pre-${PKG_BASENAME}.tgz"
+   # We do this for the same reason as in restore_backup
+   FILES=$(ls -A)
+   $TAR -cpf - $FILES | gzip -9 > "${DIRECTORIO_FUENTE}/backup-`date +%m%d%Y%H%M`-pre-${PKG_BASENAME}.tgz"
+    okfail
+
    okfail
 fi
 
