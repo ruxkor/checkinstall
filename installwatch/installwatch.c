@@ -137,6 +137,7 @@ static int (*true_linkat)(int, const char *, int, const char *, int);
 static int (*true_mkdirat)(int, const char *, mode_t);
 static int (*true_readlinkat)(int, const char *, char *, size_t);
 static int (*true_xmknodat)(int, int, const char *, mode_t, dev_t *);
+static int (*true_renameat)(int, const char *, int, const char *);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -395,6 +396,7 @@ static void initialize(void) {
 	true_mkdirat      = dlsym(libc_handle, "mkdirat");
 	true_readlinkat      = dlsym(libc_handle, "readlinkat");
 	true_xmknodat      = dlsym(libc_handle, "__xmknodat");
+	true_renameat      = dlsym(libc_handle, "renameat");
 
 #endif
 
@@ -4285,6 +4287,60 @@ int __xmknodat (int version, int dirfd,const char *path,mode_t mode,dev_t *dev) 
  
 	return result;
 }
+
+
+int renameat (int olddirfd, const char *oldpath,
+                  int newdirfd, const char *newpath) {
+ 	
+ 	int result;
+ 	instw_t instwold;
+ 	instw_t instwnew;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if( (olddirfd == AT_FDCWD || *oldpath == '/') &&
+             (newdirfd == AT_FDCWD || *newpath == '/') )
+		{
+		 #if DEBUG
+			debug(2, "renameat(%d, %s, %d, %s)\n", olddirfd, oldpath, newdirfd, newpath);
+		 #endif
+
+		 return rename(oldpath, newpath); 
+
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "renameat(%d, %s, %d, %s)\n", olddirfd, oldpath, newdirfd, newpath);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_rename(oldpath, newpath);
+	
+ 	instw_new(&instwold);
+ 	instw_new(&instwnew);
+ 	instw_setpathrel(&instwold,olddirfd,oldpath);
+ 	instw_setpathrel(&instwnew,newdirfd,newpath);
+ 	
+#if DEBUG
+ 	instw_print(&instwold);
+ 	instw_print(&instwnew);
+#endif
+ 	
+ 	result=rename(instwold.path, instwnew.path);
+ 	
+ 	instw_delete(&instwold);
+ 	instw_delete(&instwnew);
+ 
+	return result;
+}
+
 
 
 #endif /* GLIBC_MINOR >= 4 */
