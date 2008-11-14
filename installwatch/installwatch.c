@@ -135,6 +135,7 @@ static int (*true_fxstatat)(int, int, const char *, struct stat *, int);
 static int (*true_fxstatat64)(int, int, const char *, struct stat64 *, int);
 static int (*true_linkat)(int, const char *, int, const char *, int);
 static int (*true_mkdirat)(int, const char *, mode_t);
+static int (*true_readlinkat)(int, const char *, char *, size_t);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -387,6 +388,7 @@ static void initialize(void) {
 	true_fxstatat64      = dlsym(libc_handle, "__fxstatat64");
 	true_linkat      = dlsym(libc_handle, "linkat");
 	true_mkdirat      = dlsym(libc_handle, "mkdirat");
+	true_readlinkat      = dlsym(libc_handle, "readlinkat");
 
 #endif
 
@@ -4185,6 +4187,50 @@ int mkdirat (int dirfd, const char *path, mode_t mode) {
 #endif
  	
  	result=mkdir(instw.path,mode);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
+
+
+int readlinkat (int dirfd, const char *path,
+                      char *buf, size_t bufsiz) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "readlinkat(%d,%s, %s, %d)\n", dirfd, path, buf, bufsiz);
+		 #endif
+		 return readlink(path, buf, bufsiz);
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "readlinkat(%d,%s, %s, %d)\n", dirfd, path, buf, bufsiz);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_readlink(path, buf, bufsiz);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=readlink(instw.path, buf, bufsiz);
  	
  	instw_delete(&instw);
  
