@@ -139,6 +139,7 @@ static int (*true_readlinkat)(int, const char *, char *, size_t);
 static int (*true_xmknodat)(int, int, const char *, mode_t, dev_t *);
 static int (*true_renameat)(int, const char *, int, const char *);
 static int (*true_symlinkat)(const char *, int, const char *);
+static int (*true_unlinkat)(int, const char *, int);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -399,6 +400,7 @@ static void initialize(void) {
 	true_xmknodat      = dlsym(libc_handle, "__xmknodat");
 	true_renameat      = dlsym(libc_handle, "renameat");
 	true_symlinkat     = dlsym(libc_handle, "symlinkat");
+	true_unlinkat      = dlsym(libc_handle, "unlinkat");
 
 #endif
 
@@ -4385,5 +4387,78 @@ int symlinkat (const char *oldpath, int dirfd, const char *newpath) {
  
 	return result;
 }
+
+
+int unlinkat (int dirfd, const char *path, int flags) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *path == '/')
+		{
+		 #if DEBUG
+			debug(2, "unlinkat(%d,%s,0%o)\n", dirfd, path, flags);
+		 #endif
+
+		 /* If we have AT_REMOVEDIR then we need        */
+		 /* rmdir() behaviour, according to unlinkat(2) */
+
+		 if ( flags & AT_REMOVEDIR ) {
+		    return rmdir(path); 
+		 }
+		 else {
+		    return unlink(path);
+		 }
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "unlinkat(%d,%s,0%o)\n", dirfd, path, flags);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP)) {
+	 	/* If we have AT_REMOVEDIR then we need        */
+		 /* rmdir() behaviour, according to unlinkat(2) */
+
+		 if ( flags & AT_REMOVEDIR ) {
+		    result=true_rmdir(path); 
+		 }
+		 else {
+	 	    result=true_unlink(path);
+		 }
+	}
+ 	
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,path);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+	 /* If we have AT_REMOVEDIR then we need        */
+	 /* rmdir() behaviour, according to unlinkat(2) */
+
+	 if ( flags & AT_REMOVEDIR ) {
+	    result=rmdir(instw.path); 
+	 }
+	 else {
+ 	    result=unlink(instw.path);
+	 }
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+
+}
+
 
 #endif /* GLIBC_MINOR >= 4 */
