@@ -133,6 +133,7 @@ static int (*true_fchmodat)(int, const char *, mode_t, int);
 static int (*true_fchownat)(int, const char *, uid_t, gid_t, int);
 static int (*true_fxstatat)(int, int, const char *, struct stat *, int);
 static int (*true_fxstatat64)(int, int, const char *, struct stat64 *, int);
+static int (*true_linkat)(int, const char *, int, const char *, int);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -383,6 +384,7 @@ static void initialize(void) {
 	true_fchownat      = dlsym(libc_handle, "fchownat");
 	true_fxstatat      = dlsym(libc_handle, "__fxstatat");
 	true_fxstatat64      = dlsym(libc_handle, "__fxstatat64");
+	true_linkat      = dlsym(libc_handle, "linkat");
 
 #endif
 
@@ -1665,6 +1667,12 @@ static int instw_setpathrel(instw_t *instw, int dirfd, const char *relpath) {
 	char *newpath;
 	char proc_path[PROC_PATH_LEN];
 	struct stat s;
+
+
+	/* If dirfd is AT_FDCWD then we got nothing to do, return the */
+	/* path as-is                                                 */
+
+	if ( dirfd == AT_FDCWD ) return instw_setpath(instw, relpath);
 
 	snprintf(proc_path, PROC_PATH_LEN, "/proc/self/fd/%d", dirfd);
 	if(true_stat(proc_path, &s) == -1)
@@ -4074,6 +4082,66 @@ int __fxstatat64 (int version, int dirfd, const char *path, struct stat64 *s, in
  
 	return result;
 
+}
+
+
+int linkat (int olddirfd, const char *oldpath,
+                  int newdirfd, const char *newpath, int flags) {
+ 	
+ 	int result;
+ 	instw_t instwold;
+ 	instw_t instwnew;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if( (olddirfd == AT_FDCWD || *oldpath == '/') &&
+             (newdirfd == AT_FDCWD || *newpath == '/') )
+		{
+		 #if DEBUG
+			debug(2, "linkat(%d, %s, %d, %s, 0%o)\n", olddirfd, oldpath, newdirfd, newpath, flags );
+		 #endif
+
+/*** FIXME: If we have AT_SYMLINK_NOFOLLOW we need to dereference the links 
+
+		 if ( flags & AT_SYMLINK_NOFOLLOW ) {
+		    return __lxstat(version, path, s); 
+		 }
+		 else {
+		    return __xstat(version, path, s);
+		 }
+***************************************************************** FIXME */
+
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "linkat(%d, %s, %d, %s, 0%o)\n", olddirfd, oldpath, newdirfd, newpath, flags );
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_link(oldpath, newpath);
+	
+ 	instw_new(&instwold);
+ 	instw_new(&instwnew);
+ 	instw_setpathrel(&instwold,olddirfd,oldpath);
+ 	instw_setpathrel(&instwnew,newdirfd,newpath);
+ 	
+#if DEBUG
+ 	instw_print(&instwold);
+ 	instw_print(&instwnew);
+#endif
+ 	
+ 	result=link(instwold.path, instwnew.path);
+ 	
+ 	instw_delete(&instwold);
+ 	instw_delete(&instwnew);
+ 
+	return result;
 }
 
 #endif /* GLIBC_MINOR >= 4 */
