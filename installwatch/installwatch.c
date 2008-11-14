@@ -138,6 +138,7 @@ static int (*true_mkdirat)(int, const char *, mode_t);
 static int (*true_readlinkat)(int, const char *, char *, size_t);
 static int (*true_xmknodat)(int, int, const char *, mode_t, dev_t *);
 static int (*true_renameat)(int, const char *, int, const char *);
+static int (*true_symlinkat)(const char *, int, const char *);
 #endif
 
 #if defined __GNUC__ && __GNUC__>=2
@@ -397,6 +398,7 @@ static void initialize(void) {
 	true_readlinkat      = dlsym(libc_handle, "readlinkat");
 	true_xmknodat      = dlsym(libc_handle, "__xmknodat");
 	true_renameat      = dlsym(libc_handle, "renameat");
+	true_symlinkat     = dlsym(libc_handle, "symlinkat");
 
 #endif
 
@@ -4342,5 +4344,46 @@ int renameat (int olddirfd, const char *oldpath,
 }
 
 
+int symlinkat (const char *oldpath, int dirfd, const char *newpath) {
+ 	
+ 	int result;
+ 	instw_t instw;
+ 
+ 	/* If all we are doing is normal open, forgo refcounting, etc. */
+         if(dirfd == AT_FDCWD || *newpath == '/')
+		{
+		 #if DEBUG
+			debug(2, "symlinkat(%s, %d, %s)\n", oldpath, dirfd, newpath);
+		 #endif
+		 return symlink(oldpath, newpath);
+		}
+ 
+ 	REFCOUNT;
+ 
+ 	if (!libc_handle)
+ 		initialize();
+ 
+#if DEBUG
+	debug(2, "symlinkat(%s, %d, %s)\n", oldpath, dirfd, newpath);
+#endif
+ 	
+ 	/* We were asked to work in "real" mode */
+ 	if(!(__instw.gstatus & INSTW_INITIALIZED) ||
+ 	   !(__instw.gstatus & INSTW_OKWRAP))
+ 		return true_symlink(oldpath, newpath);
+	
+ 	instw_new(&instw);
+ 	instw_setpathrel(&instw,dirfd,newpath);
+ 	
+#if DEBUG
+ 	instw_print(&instw);
+#endif
+ 	
+ 	result=symlink(oldpath, instw.path);
+ 	
+ 	instw_delete(&instw);
+ 
+	return result;
+}
 
 #endif /* GLIBC_MINOR >= 4 */
