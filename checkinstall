@@ -131,6 +131,7 @@ function usage() {
    echog "--maintainer=<email addr>      The package maintainer (.deb)"
    echog "--provides=<list>              Features provided by this package"
    echog "--requires=<list>              Features required by this package"
+   echog "--conflicts=<list>             Packages that this package cannot be installed with (.deb)"
    echog "--rpmflags=<flags>             Pass this flags to the rpm installer"
    echog "--rpmi                         Use the -i flag for rpm when installing a .rpm"
    echog "--rpmu                         Use the -U flag for rpm when installing a .rpm"
@@ -480,7 +481,7 @@ fi
 # Arguments parsing
 
 CKNAME=`basename "$0"`
-PARAMS=`getopt -a -n $CKNAME -o +d:DA:t:RShHy -l arch:,type:,si,showinstall::,ss,showslack::,deldoc::,delspec::,deldesc::,strip::,addso::,install::,stripso::,gzman::,bk,backup::,autodoinst::,reset-uids::,fstrans::,spec:,exclude:,include:,pkgname:,pkgversion:,pkgrelease:,pkglicense:,pkggroup:,pkgsource:,pkgaltsource:,pakdir:,docdir:,requires:,provides:,maintainer:,dpkgflags:,rpmflags:,pkgarch:,umask:,with-tar:,inspect,review-spec,review-control,newslack,help,nodoc,rpmi,rpmu,version,copyright,default -- "$@"`
+PARAMS=`getopt -a -n $CKNAME -o +d:DA:t:RShHy -l arch:,type:,si,showinstall::,ss,showslack::,deldoc::,delspec::,deldesc::,strip::,addso::,install::,stripso::,gzman::,bk,backup::,autodoinst::,reset-uids::,fstrans::,spec:,exclude:,include:,pkgname:,pkgversion:,pkgrelease:,pkglicense:,pkggroup:,pkgsource:,pkgaltsource:,pakdir:,docdir:,requires:,provides:,conflicts:,maintainer:,dpkgflags:,rpmflags:,pkgarch:,umask:,with-tar:,inspect,review-spec,review-control,newslack,help,nodoc,rpmi,rpmu,version,copyright,default -- "$@"`
 
 [ $? -gt 0 ] && help_notice
 
@@ -554,6 +555,10 @@ while [ "$1" != "--" ]; do
       --provides)
          shift
          PROVIDES=`eval echo $1`
+         ;;
+      --conflicts)
+         shift
+         CONFLICTS=`eval echo $1`
          ;;
       --requires)
          shift
@@ -1356,7 +1361,7 @@ fi
           echog "10 - Requires: [ %s ]" "$REQUIRES"
       [ "$CK_REDHAT" -o "$CK_DEBIAN" ] &&
           echog "11 - Provides: [ %s ]" "$PROVIDES"
-
+      [ "$CK_DEBIAN" ] && echog "12 - Conflicts: [ %s ]" "$CONFLICTS"
 
       echo
       echogn "Enter a number to change any of them or press ENTER to continue: "
@@ -1433,6 +1438,12 @@ fi
             echog "Enter the provided features: "
             echo -n ">> "
             read PROVIDES
+            }
+            ;;
+        12)
+            [ "$CK_DEBIAN" ] && { echog "Enter the conflicting packages: "
+            echo -n ">> "
+            read CONFLICTS
             }
             ;;
       esac
@@ -2520,6 +2531,7 @@ Architecture: $ARCHITECTURE
 Version: ${VERSION}-${RELEASE}
 Depends: $REQUIRES
 Provides: $PROVIDES
+Conflicts: $CONFLICTS
 Description: $SUMMARY
 EOF
 
