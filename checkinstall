@@ -40,11 +40,32 @@ trap trapint 2
 
 CHECKINSTALL_VERSION=1.6.2
 
+# locate the file or directory that the parameter corresponds to;
+# always prints absolute path
+function followlinks () {
+    local entry="$1"
+    local symlink
 
+    case "$entry" in /*) true ;;
+        *) entry="`pwd`/$entry";;
+    esac
+    if [ -L "$entry" ]; then
+        symlink=`ls -l "$entry" | sed -e 's/.* -> //'`
+        
+        case "$symlink" in /*) entry="$symlink";;
+            *) entry=`dirname "$entry"`/$symlink;;
+        esac
+        followlinks "$entry"
+    else
+        echo "$entry"
+    fi
+}
 
+INSTALLDIR=`followlinks "$0"`
+INSTALLDIR=`dirname "$INSTALLDIR"`/..
 
 # gettext variables
-export TEXTDOMAINDIR=/usr/local/lib/checkinstall/locale
+export TEXTDOMAINDIR="$INSTALLDIR"/lib/checkinstall/locale
 export TEXTDOMAIN=checkinstall
 
 # .spec file path
@@ -468,13 +489,14 @@ function copy_dir_hierarchy {
 ckversion
 echo
 
-if ! [ -f /usr/local/lib/checkinstall/checkinstallrc ]; then
-   echog "The checkinstallrc file was not found at:\n/usr/local/lib/checkinstall/checkinstallrc"
+CHECKINSTALLRC=${CHECKINSTALLRC:-${INSTALLDIR}/checkinstallrc}
+if ! [ -f $CHECKINSTALLRC ]; then
+   echog "The checkinstallrc file was not found at:\n$CHECKINSTALLRC"
    echo
    echog "Assuming default values."
 else
 # Get our default settings from the rc file
-source /usr/local/lib/checkinstall/checkinstallrc
+source $CHECKINSTALLRC
 fi
 
 
@@ -849,7 +871,7 @@ shift
 # Debug level
 ! [ "$DEBUG" ] && DEBUG=0
 
-! [ "$INSTALLWATCH_PREFIX" ] && INSTALLWATCH_PREFIX="/usr/local"
+! [ "$INSTALLWATCH_PREFIX" ] && INSTALLWATCH_PREFIX="$INSTALLDIR"
 ! [ "$INSTALLWATCH" ] && INSTALLWATCH=${INSTALLWATCH_PREFIX}/bin/installwatch
 
 # Which makepkg to use
