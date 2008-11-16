@@ -4265,7 +4265,7 @@ int mkdirat (int dirfd, const char *path, mode_t mode) {
 }
 
 
-int readlinkat (int dirfd, const char *path,
+READLINKAT_T readlinkat (int dirfd, const char *path,
                       char *buf, size_t bufsiz) {
  	
  	int result;
@@ -4275,7 +4275,7 @@ int readlinkat (int dirfd, const char *path,
          if(dirfd == AT_FDCWD || *path == '/')
 		{
 		 #if DEBUG
-			debug(2, "readlinkat(%d,%s, %s, %d)\n", dirfd, path, buf, bufsiz);
+                    debug(2, "readlinkat(%d,%s, %s, %ld)\n", dirfd, path, buf, (long)bufsiz);
 		 #endif
 		 return readlink(path, buf, bufsiz);
 		}
@@ -4286,7 +4286,7 @@ int readlinkat (int dirfd, const char *path,
  		initialize();
  
 #if DEBUG
-	debug(2, "readlinkat(%d,%s, %s, %d)\n", dirfd, path, buf, bufsiz);
+	debug(2, "readlinkat(%d,%s, %s, %ld)\n", dirfd, path, buf, (long)bufsiz);
 #endif
  	
  	/* We were asked to work in "real" mode */

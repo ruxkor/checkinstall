@@ -30,6 +30,15 @@ else
 	echo '#define TRUNCATE_T off_t' >> $OUTFILE
 fi
 
+echo -n 'Checking readlinkat result type... '
+if grep -q 'ssize_t.*readlinkat' /usr/include/unistd.h ; then
+	echo 'ssize_t'
+	echo '#define READLINKAT_T ssize_t' >> $OUTFILE
+else
+	echo 'int' # according to man page
+	echo '#define READLINKAT_T int' >> $OUTFILE
+fi
+
 ###
 ###
 ###

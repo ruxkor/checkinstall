@@ -21,7 +21,7 @@ installwatch.so: installwatch.o
 installwatch.o: installwatch.c localdecls.h
 	gcc -Wall -c -D_GNU_SOURCE -DPIC -fPIC -D_REENTRANT -DVERSION=\"$(VERSION)\" installwatch.c
 
-localdecls.h:
+localdecls.h: create-localdecls
 	./create-localdecls
 
 install: all
