@@ -2598,8 +2598,8 @@ fi
 find $BUILD_DIR/etc 2> /dev/null | sed -e "s,$BUILD_DIR,," | \
 	grep -v '^/etc$' > $BUILD_DIR/DEBIAN/conffiles
 
-# The package will be saved here:
-DEBPKG="${DIRECTORIO_FUENTE}/${NAME}_${VERSION}-${RELEASE}_${ARCHITECTURE}.deb"
+# The package will be saved here (ignores <epoch>: prefix):
+DEBPKG="${DIRECTORIO_FUENTE}/${NAME}_`echo ${VERSION} | sed -e 's/^[0123456789]*://'`-${RELEASE}_${ARCHITECTURE}.deb"
 # This one is for 2.2 "Potato" (or older) style packages
 #DEBPKG="${DIRECTORIO_FUENTE}/${NAME}_${VERSION}-${RELEASE}.deb"
 
