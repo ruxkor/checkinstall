@@ -1676,7 +1676,7 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	done
 
 	# Find files created under /home
-	grep '^/home' ${TMP_DIR}/newfile > /${TMP_DIR}/unwanted
+	grep '^/home' ${TMP_DIR}/newfiles > /${TMP_DIR}/unwanted
 	if [ $? -eq 0 ]; then
 	   echo
 	   echog "Some of the files created by the installation are inside the home directory: /home"
