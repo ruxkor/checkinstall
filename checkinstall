@@ -179,6 +179,8 @@ function usage() {
    echog "                               the owner/group for all dirs to root.root"
    echog "--gzman=<yes|no>               Compress any man pages found inside the package"
    echog "--docdir=<path>                Where to put documentation files"
+   echog "                               The package name+version gets automatically appended."
+   echog "                               To avoid that prefix the path with a colon (:)."
    echog "--umask=<mask>                 Set the umask value"
    echog "--exclude=<file|dir[,...]>     Exclude these files/directories from the package"
    echog "--include=<listfile>           Force the inclusion in the package of the"
@@ -1594,10 +1596,14 @@ if [ $INSTALL_FAILED -gt 0 ]; then
 	if [ -d "$DIRECTORIO_FUENTE/doc-pak" ]; then    # Are there any files? 
 	   echo
 	   echo "Copying documentation directory..."
-	   mkdir -p "${BUILD_DIR}/${DOC_DIR}/${NAME}"
+           case "${DOC_DIR}" in
+               :*) doc_dir=`echo "${DOC_DIR}" | sed -e 's/://'`;;
+               *) doc_dir="${DOC_DIR}/${NAME}";;
+           esac
+	   mkdir -p "${BUILD_DIR}/${doc_dir}"
 	   copy_dir_hierarchy . "$DIRECTORIO_FUENTE/doc-pak" \
-               "${BUILD_DIR}/${DOC_DIR}/${NAME}"
-	   chown -R root.root "${BUILD_DIR}/${DOC_DIR}/${NAME}"
+               "${BUILD_DIR}/${doc_dir}"
+	   chown -R root.root "${BUILD_DIR}/${doc_dir}"
 	fi
 	
 	# If we have a --include list file, copy the files listed there to /
