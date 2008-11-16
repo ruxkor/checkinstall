@@ -1531,7 +1531,8 @@ else
    fi
 fi
 
-unset LD_PRELOAD
+# preserve LD_PRELOAD, might have been set by fakeroot 
+# unset LD_PRELOAD
 
 
 VIEWLOG="n"

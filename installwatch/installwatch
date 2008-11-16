@@ -320,7 +320,11 @@ fi
 # ##############################################################################
 #
 
-LD_PRELOAD="$LIBDIR/installwatch.so"
+if [ "$LD_PRELOAD" ]; then
+    LD_PRELOAD="$LIBDIR/installwatch.so:$LD_PRELOAD"
+else
+    LD_PRELOAD="$LIBDIR/installwatch.so"
+fi
 export LD_PRELOAD
 
 if [ $INSTW_DBGLVL -gt 0 ]; then 
