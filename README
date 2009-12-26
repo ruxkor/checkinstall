@@ -1,5 +1,5 @@
 ##############################################################################
-#                       #     checkinstall 1.6.1    #                        #
+#                       #     checkinstall 1.6.2    #                        #
 #                       #############################                        #
 #                                                                            #
 #  Installs a compiled program from the program's source directory using     #
@@ -673,5 +673,4 @@ o Spanish
 
 
 ==========
-$Id: README,v 1.6.1.1 2006/11/01 07:27:01 izto Exp $
 

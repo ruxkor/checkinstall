@@ -1,3 +1,319 @@
+========== Checkinstall 1.6.2 is released ===========
+
+commit 3af2ebd909675c7e6c75dfc8516894208c8b9797
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:18:58 2008 -0600
+
+    Fixed typo when finding files created under /home
+
+commit e4a3eda80922bcc1c6a065b39ccc1a5f6279675e
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:15:58 2008 -0600
+
+    fixed type issues on 64 bit glibc 2.7
+    
+    Patrick Ohly
+
+commit e02fd179f57d8808238a20507d8615c091ca5951
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:14:54 2008 -0600
+
+    --replaces option, similar to --conflicts (Debian only)
+    
+    Patrick Ohly
+
+commit 897fa9da37b215d441faf5cc73032705fc892043
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:14:14 2008 -0600
+
+    No epoch in Debian version
+    
+    Do not use the epoch in a package version (<num>: prefix)
+    for the package name (that's also what dpkg-buildpackage does).
+    
+    Patrick Ohly
+
+commit 932082d084c2e8aa50c958b03d190c2b5884fce3
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:13:08 2008 -0600
+
+    docdir without package name
+    
+    With the traditional --docdir option it is not possible
+    to select a path which does not include the package name
+    and version. With this patch one can use
+      --docdir=:<path>
+      to select a directory that nothing gets appended to.
+    
+    Patrick Ohly
+
+commit d49c9b09e576056374ba8491238ce43b769363eb
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:12:24 2008 -0600
+
+    Avoid hard-coded installation directory
+    
+    Instead of hard-coding /usr/local as installation directory,
+    find out where the checkinstall script is actually located
+    and find the other files relative to that:
+    
+    <prefix>/bin/checkinstall
+    <prefix>/lib/checkinstall/...
+    <prefix>/lib/installwatch.so
+    
+    Patrick Ohly
+
+commit 90f2cf5d71638bb5512e7d2f1db76b19b94a7c7c
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:07:29 2008 -0600
+
+    Allow package creation without being root via fakeroot
+    
+    Note that the default location of checkinstall is not normally
+    in PATH of normal users, so call it explicitly or set PATH:
+       fakeroot /usr/local/sbin/checkinstall ...
+    
+    Patrick Ohly
+
+commit 51a2bfc55ac0ab444ffff58440478d5bf5028b95
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Sun Nov 16 10:06:25 2008 -0600
+
+    --conflicts, similar to --provides (Debian only)
+    
+    Patrick Ohly
+
+commit f241975428f39ed25ffc44dc4d9c505ebe070314
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 11:51:10 2008 -0600
+
+    The test for AT_SYMLINK_NOFOLLOW wasn't being done in all the places we needed it.
+
+commit efb7b13a16190bd390d5cafbe357883769b9009c
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 11:27:42 2008 -0600
+
+    Added unlinkat() support
+
+commit 25e30f61125481a72594e94dae5ba2dd3d085eed
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 11:03:56 2008 -0600
+
+    Added symlinkat() support
+
+commit 422349e61249b7eb9eed1cc6cdba002e191c0cfd
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 10:33:23 2008 -0600
+
+    Added renameat() support. Fixed filenames with spaces regression.
+    
+    Sebastien's patch had trouble copying files with spaces in their name. Fixed it.
+
+commit 93f567e76a686c242412acf01bec33f28bbb18ce
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 10:02:43 2008 -0600
+
+    Added mknodat() support.
+    
+    Just like fstatat(), it requires us to define __xmknodat()
+
+commit 26cc029823ca5e4cf965ce948a25a5b4b4bf3bf9
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 09:18:58 2008 -0600
+
+    Added readlinkat() support
+
+commit 8c74edad883d74283e171c70f49613e0fd77dcc7
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 08:59:00 2008 -0600
+
+    Added mkdirat() support, fixed link() ommission.
+
+commit e993c1f9f7cca1e69576ab7dd7538e146106c298
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 01:24:50 2008 -0600
+
+    Patch from Sebastien Vasey for permissions and symlinks issues.
+    
+    Fixes a permission issue that, for example would let a package created
+    by checkinstall change the owner of a user's home directory to root. This is
+    done by ensuring permissions are preserved at each step.
+    
+    An issue with symlinks is also fixed. The patch makes checkinstall
+    dereference all symbolic links that are not created by the installation script,
+    while the others are kept.
+
+commit 66e142436759e8085a274f57f8c4d9d7a549e8f7
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Fri Nov 14 01:01:37 2008 -0600
+
+    Added linkat() support
+    
+    In instw_setpathrel():
+     If dirfd is AT_FDCWD then we got nothing to do, return the path as-is
+    
+    In linkat():
+    FIXME: If we have AT_SYMLINK_NOFOLLOW we need to dereference the links
+
+commit 653cc2da7a885c5688e12af31c12dc58db16d7f2
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 18:30:24 2008 -0600
+
+    Updated checkinstall version Id, minor debug message format fix for fopen()
+
+commit 380e3a4520097464681442cf64022bd86aab18ab
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 18:24:19 2008 -0600
+
+    Added support for chownat() and fstatat()
+    
+    Included fstatat() support which in fact requires
+    __fxstatat() and __fxstatat64(). Just like __xstat() and its relatives,
+    they are the back-end for fstatat(), which in glibc is implemented as
+    an inline function. See the details in sys/stat.h.
+    
+    While doing a strace of the chown utility I found out it calls chmod32()
+    so I added a small hook to support it.
+
+commit e9ccdd2f8c0f846e62203d4f1d3c77cfa7d8c9d8
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 16:15:31 2008 -0600
+
+    checkinstall: Keep tmp dir and debug file if in debug mode
+    installwatch: Use the right variable name for fchmodat() debug call
+
+commit e954f02a9697bd342baff65353b59162e5621f0b
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 15:22:00 2008 -0600
+
+    Cleaned up the source directory
+
+commit 8efcfadff61443642cda7b888d1b7da0f0759f0a
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 15:12:00 2008 -0600
+
+    Removed execve() support
+    
+    I don't need it right now and it's causing segfaults when running checkinstall.
+    I'll look into it later.
+
+commit c0c4ff9855de594e9b7ac3240bb728277cda557a
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 15:09:56 2008 -0600
+
+    Added fchownat() support
+
+commit d084a5e13a3dc3530ec11f2fd7e7bb55a02c0cbf
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Wed Nov 12 08:06:42 2008 -0600
+
+    Added a comment explaining the way openat()-ish functions are implemented.
+
+commit 18e25050c33020e8f52e41016d43c141ed9890bd
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:43:43 2008 -0600
+
+    Added locale files
+
+commit 22f158b0a2f8b297e5ea4e4cdb2462458b3ac6a3
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:22:43 2008 -0600
+
+    Eiminated the installwatch version from checkinstall's Makefile
+
+commit 7a66fe38c23eda68ec19e14e5c88365ec1095e56
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:14:34 2008 -0600
+
+    Support for 64-bit architectures in the installwatch script
+
+commit 24709aa3e4635b9b5adcc3b4a6b3f3f2ad975400
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:08:20 2008 -0600
+
+    Update localdecls for newer glibc minor versions
+
+commit 3a8f06f1b33bb02fb899b7e65200d9285d047ca6
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:04:34 2008 -0600
+
+    Support for readlink() variations from different glibc versions.
+
+commit 8985cab38df1abfb9b36b1275577601021878038
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 20:01:30 2008 -0600
+
+    Added reduce() invocation in instw_setpath() to clean up the path
+
+commit a3cea18f491fa5db6b4d1c0558d96dcd4247c7d8
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:58:30 2008 -0600
+
+    Fix minor debug messages formatting errors
+
+commit 40c03122c5b615ce151f7a4cf2bb088d547d7af2
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:57:23 2008 -0600
+
+    fchmodat() support
+
+commit 8414cfda5031039a91a2ee3ef7fd5455d151c2b0
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:56:11 2008 -0600
+
+    Added reduce()
+    
+    It simplyfies paths, by reducing all occurences of "..", ".", and extra "/"
+    in path.
+
+commit dcf3294b15f1bb89aa1b809513a68be29a9caf25
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:54:12 2008 -0600
+
+    openat() support
+
+commit 41fcd29f564980e0604200e3ad8d79b6133cbf74
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:50:01 2008 -0600
+
+    Switch log() for logg()
+
+commit 8afe5835ed8930aa7140a1c4182e4be320bfefe0
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:40:53 2008 -0600
+
+    removexattr() from Alex Kern
+
+commit ef703d588638e76f6dc6e69d87eba26ead7fd066
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:39:16 2008 -0600
+
+    setxattr() support from  Alex Kern
+
+commit ec51e682ea122291e14aa4ed8deb835474838174
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:33:29 2008 -0600
+
+    Initialize trlen, from the code-cleanups.patch from SuSE installwatch-1.6.1-40
+
+commit b26ba653f386051e94691721921c650d833c2b79
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:32:27 2008 -0600
+
+    Save errno, sent by Benoît PAPILLAULT at Source Mage linux
+
+commit 7c2b1b3528f53d6e5d44261d2b1c77951e466e2f
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 19:30:21 2008 -0600
+
+    Modified some grammar / spelling mistakes
+
+commit c48d9af661e762fbff5bb31aaefa72bf088bb120
+Author: Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Date:   Tue Nov 11 13:35:00 2008 -0600
+
+    Switch to git. Checkinstall pre 1.6.2
+
 nov/01/2006
 
     * Provides/Requires bug fixed
@@ -506,4 +822,3 @@ nov/18/2000 by Kevin D. Knerr, Sr. <ld_barthel@yahoo.com>
 
 
 ===========
-$Id: Changelog,v 1.6.1.1 2006/11/01 07:28:34 izto Exp $
