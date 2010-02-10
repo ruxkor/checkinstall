@@ -1,10 +1,10 @@
 #!/bin/bash
 ##############################################################################
-#         $Id: checkinstall,v 1.6.2.17 2009/12/26 13:15:21 izto Exp $ 
+#         $Id: checkinstall,v 1.6.3.1 2010/02/10 14:42:32 izto Exp $ 
 #                           ########################                         
 #                                                                            
 #
-#                             CheckInstall v1.6.2
+#                             CheckInstall v1.6.3
 #
 #  Installs a compiled program from the program's source directory using     
 #  "make install" or any other command supplied on checkinstall's command  
@@ -38,7 +38,7 @@
 # Trap the INT signal (ctrl-c, for example)
 trap trapint 2
 
-CHECKINSTALL_VERSION=1.6.2
+CHECKINSTALL_VERSION=1.6.3
 
 # locate the file or directory that the parameter corresponds to;
 # always prints absolute path
@@ -2463,7 +2463,7 @@ cd "$DIRECTORIO_FUENTE"
 
 echo
 echogn "Building RPM package..."
-$RPMBUILD -bb ${RPM_TARGET_FLAG}${ARCHITECTURE} "$SPEC_PATH" &> ${TMP_DIR}/rpmbuild.log
+$RPMBUILD -bb ${RPM_TARGET_FLAG}${ARCHITECTURE} "$SPEC_PATH" --buildroot="$BROOTPATH" &> ${TMP_DIR}/rpmbuild.log
 okfail
 
 if [ $? -gt 0 ]; then
@@ -2608,7 +2608,7 @@ if [ -f postremove-pak ]; then
 fi
 
 # Tag files in /etc to be conffiles
-find $BUILD_DIR/etc 2> /dev/null | sed -e "s,$BUILD_DIR,," | \
+find $BUILD_DIR/etc -type f 2> /dev/null | sed -e "s,$BUILD_DIR,," | \
 	grep -v '^/etc$' > $BUILD_DIR/DEBIAN/conffiles
 
 # The package will be saved here (ignores <epoch>: prefix):

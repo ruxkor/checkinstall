@@ -64,6 +64,7 @@ if test "$VERSION" = 'libc.so.6' ; then
 	case "$OsLibcMajor" in
 	2)
 		# 2 is the glibc version
+		echo "JH OsLibcMinor is $OsLibcMinor"
 		case "$OsLibcMinor" in
 		0)
 			echo '#define GLIBC_MINOR 0' >> $OUTFILE
@@ -89,6 +90,21 @@ if test "$VERSION" = 'libc.so.6' ; then
 		7)
 			echo '#define GLIBC_MINOR 7' >> $OUTFILE
 			SUBVERSION='glibc-2.7' ;;
+		8)
+			echo '#define GLIBC_MINOR 8' >> $OUTFILE
+			SUBVERSION='glibc-2.8' ;;
+		9)
+			echo '#define GLIBC_MINOR 9' >> $OUTFILE
+			SUBVERSION='glibc-2.9' ;;
+		10)
+			echo '#define GLIBC_MINOR 10' >> $OUTFILE
+			SUBVERSION='glibc-2.10' ;;
+		11)
+			echo '#define GLIBC_MINOR 11' >> $OUTFILE
+			SUBVERSION='glibc-2.11' ;;
+		12)
+			echo '#define GLIBC_MINOR 12' >> $OUTFILE
+			SUBVERSION='glibc-2.12' ;;
 		*)
 			echo 'Treated as glibc >= 2.1 (finger crossed)'
 			echo '#define GLIBC_MINOR 1' >> $OUTFILE
