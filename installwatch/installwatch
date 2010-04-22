@@ -43,7 +43,7 @@ function ckversion {
 	echo
 	echo -n "installwatch $INSTALLWATCH_VERSION, "
 	echo    "Copyright 1998 Pancrazio de Mauro"
-	echo    "Copyright 2002 Felipe Eduardo Sanchez Diaz Duran"
+	echo    "Copyright 2010 Felipe Eduardo Sanchez Diaz Duran"
 	echo    "           This software is released under the GNU GPL."
 }
 
@@ -179,8 +179,8 @@ while [ "$1" != "--" ]; do
 		--copyright|--version)
 			cat << EOF
 
-Copyright (C) 1998 Pancrazio `Ezio' de Mauro 
-Copyright (C) 2002 Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
+Copyright (C) 1998 Pancrazio 'Ezio' de Mauro
+Copyright (C) 2010 Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
