@@ -2798,7 +2798,6 @@ if [ $? -eq 0 ]; then
    # We do this for the same reason as in restore_backup
    FILES=$(ls -A)
    $TAR -cpf - $FILES | gzip -9 > "${DIRECTORIO_FUENTE}/backup-`date +%m%d%Y%H%M`-pre-${PKG_BASENAME}.tgz"
-    okfail
 
    okfail
 fi

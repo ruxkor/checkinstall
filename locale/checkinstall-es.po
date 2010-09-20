@@ -1,6 +1,6 @@
-# MENSAJES PARA CHECKINSTALL-1.6.0beta1 en ESPAÑOL
-# Copyright (C) 2002 Felipe Eduardo Sánchez Díaz Durán
-# Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>, 2002.
+# MENSAJES PARA CHECKINSTALL-1.6.3 en ESPAÑOL
+# Copyright (C) 2002 - 2010 Felipe Eduardo Sánchez Díaz Durán
+# Felipe Eduardo Sanchez Diaz Duran <izto@asic-linux.com.mx>, 2010.
 #
 #, fuzzy
 msgid ""
@@ -607,7 +607,7 @@ msgid "Deleting doc-pak directory..."
 msgstr "Borrando el directorio doc-pak..."
 
 msgid "Writing backup package..."
-msgstr "Escribiendo el paquete de respaldo"
+msgstr "Escribiendo el paquete de respaldo..."
 
 msgid "Deleting temp dir..."
 msgstr "Borrando el directorio temporal..."
