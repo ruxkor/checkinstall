@@ -1,0 +1,209 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Felipe</firstname>">
+  <!ENTITY dhsurname   "<surname>Sateler</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>June 21, 2006</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
+  <!ENTITY dhemail     "<email>fsateler@gmail.com</email>">
+  <!ENTITY dhusername  "Felipe Sateler">
+  <!ENTITY dhucpackage "<refentrytitle>installwatch</refentrytitle>">
+  <!ENTITY dhpackage   "installwatch">
+
+  <!ENTITY debian      "<productname>Debian</productname>">
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2006</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>Track installation of software</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg><replaceable>options</replaceable></arg>
+
+      <arg>command</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+      <command>&dhpackage;</command> is a program that is used in order
+      to track the changes made while installing local software (i.e. 
+      "make install"). It monitors the requested command, and produces
+      a log which indicates all created and modified files. By default
+      it outputs to <application>syslog(3)</application> using a priority
+      of "LOG_USER | LOG_INFO". This may be overridden by the use of the
+      <option>-o</option> flag. The log format is as follows:
+    </para>
+    <para>
+    <computeroutput>&lt;return-value&gt; &lt;syscall-name&gt; &lt;argument&gt; #&lt;comment&gt;</computeroutput>
+    </para>
+    <para>
+    Each field is delimited by a "&caret;I" character if logging to 
+    <application>syslog(3)</application>, or by a tab when logging to a file.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>ENVIRONMENT</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>INSTALLWATCH_BACKUP_PATH</term>
+	<listitem>
+		<para>Set this variable to the location that you want
+		installwatch to copy the original version of files which
+		get modified. The directory will be created if it does
+		not exist, assuming that the parent is writable.</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <para>These program follow the usual &gnu; command line syntax,
+      with long options starting with two dashes (`-').  A summary of
+      options is included below.</para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+		<option>-o</option>
+		<option>--logfile</option>
+	</term>
+        <listitem>
+          <para>Directs that output from the logged command be written to
+	  the filename specified. If the specified file already exists, 
+	  it will be truncated.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-r</option>
+          <option>--root</option>
+        </term>
+        <listitem>
+	<para>Sets the directory under which meta-info and translated
+		files  will be stored.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-t</option>
+          <option>--trans</option>
+        </term>
+        <listitem>
+          <para>Toggle translation capabilities.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-e</option>
+          <option>--exclude</option>
+        </term>
+        <listitem>
+	<para>Sets a comma separated neutral directory list, that won't
+	be concerned by translation or backups.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option>
+          <option>--dbgfile</option>
+        </term>
+        <listitem>
+          <para>Specify a debug file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><option>-v</option>
+      <option>--dbglvl</option></term>
+      <listitem>
+        <para>Sets the debug level to be used.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><option>-h</option>
+	      <option>--help</option></term>
+      <listitem>
+        <para>Show help information.</para>
+      </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>BUGS</title>
+
+    <para>
+      &dhpackage; does not work with programs which are statically linked with
+      libc. Due to LD_PRELOAD limitations, it does not work with suid programs
+      (this would probably introduce security problems, anyway).
+    </para>
+    <para>
+	    <application>mknod(2)</application> is not monitored.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+
+    <para>This manual page was written by &dhusername; &lt;&dhemail;&gt; for
+      the &debian; system (but may be used by others). Original text 
+      by Greg Norris &lt;adric@debian.org&gt;. Permission is
+      granted to copy, distribute and/or modify this document under
+      the terms of the &gnu; General Public License, Version 2.
+    </para>
+	<para>
+	  On Debian systems, the complete text of the GNU General Public
+	  License can be found in /usr/share/common-licenses/GPL.
+	</para>
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+

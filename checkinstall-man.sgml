@@ -1,0 +1,508 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Felipe</firstname>">
+  <!ENTITY dhsurname   "<surname>Sateler</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>November 13, 2007</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
+  <!ENTITY dhemail     "<email>fsateler@gmail.com</email>">
+  <!ENTITY dhusername  "Felipe Sateler">
+  <!ENTITY dhucpackage "<refentrytitle>CheckInstall</refentrytitle>">
+  <!ENTITY dhpackage   "checkinstall">
+
+  <!ENTITY debian      "<productname>Debian</productname>">
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2006</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+    <refpurpose>
+      Track installation of local software, and produce a binary manageable
+      with your package management software.
+    </refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg><replaceable>options</replaceable></arg>
+
+      <arg><replaceable>install command</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+      <command>&dhpackage;</command> is a program that monitors an installation
+      procedure (such as <command>make install</command>, <command>install.sh
+      </command>), and creates a standard package for your distribution
+      (currently deb, rpm and tgz packages are supported) that you can install
+      through your distribution's package management system (dpkg, rpm or
+      installpkg).
+    </para>
+    <para>
+      Note that for most useful actions, <command>&dhpackage;</command> must
+      be run as root.
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <para>These programs follow the usual &gnu; command line syntax,
+      with long options starting with two dashes ('-').  A summary of
+      options is included below.</para>
+    <para>All the options that toggle a switch default to activate the option.
+      To force activation or deactivation, call them with '=yes' or '=no'. As
+      an example, to disable stripping use --strip=no.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><option>-h</option>
+          <option>--help</option>
+        </term>
+        <listitem>
+          <para>Show summary of options.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--version</option>
+        </term>
+        <listitem>
+          <para>Show version information.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--copyright</option>
+        </term>
+	<listitem><para>Show Copyright information</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--type</option>
+        </term>
+	<listitem>
+	<para>Choose packaging system. Can be one of 'slackware', 'debian'
+	or 'rpm'.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-D</option>
+        </term>
+	<listitem><para>Create a Debian package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-R</option>
+        </term>
+	<listitem><para>Create a RPM package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-S</option>
+        </term>
+	<listitem><para>Create a Slackware Package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--install</option>
+        </term>
+	<listitem><para>Toggle installation of the created package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--fstrans</option>
+        </term>
+	<listitem>
+	<para>Enable/disable filesystem translation. Filesystem translation
+	enabled causes the install to proceed in a temporary directory, thus 
+	not actually touching your system.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-y</option>
+	<option>--default</option>
+        </term>
+	<listitem><para>Accept default answers to all questions.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkgname</option>
+        </term>
+	<listitem><para>Set the package name.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkgversion</option>
+        </term>
+	<listitem><para>Set package version.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-A</option>
+	<option>--arch</option>
+	<option>--pkgarch</option>
+        </term>
+	<listitem><para>Set package architecture.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkgrelease</option>
+        </term>
+	<listitem><para>Set the package release.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkglicense</option>
+        </term>
+	<listitem><para>Set package license.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkggroup</option>
+        </term>
+	<listitem><para>Set the package group.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkgsource</option>
+        </term>
+	<listitem><para>Set source location</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pkgaltsource</option>
+        </term>
+	<listitem><para>Set alternate source location</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--pakdir</option>
+        </term>
+	<listitem><para>Where to save the new package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--maintainer</option>
+        </term>
+	<listitem>
+		<para>Set the package maintainer. Be careful to correctly
+			quote/escape the name, to prevent shell expansion</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--provides</option>
+        </term>
+	<listitem><para>Features provided by this package (currently only on RPM and Deb).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--requires</option>
+        </term>
+	<listitem><para>Dependencies required by this package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--rpmflags</option>
+        </term>
+	<listitem><para>Pass this flags to the rpm installer.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--rpmi</option>
+        </term>
+	<listitem><para>Use the -i flag when installing a rpm.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--rpmu</option>
+        </term>
+	<listitem><para>Use the -U flag when installing a rpm.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--dpkgflags</option>
+        </term>
+	<listitem><para>Pass this flags to the dpkg installer</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--spec</option>
+        </term>
+	<listitem><para>Where the .spec file is located</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--nodoc</option>
+        </term>
+	<listitem><para>Do not include documentation files.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option>
+        </term>
+	<listitem><para>Set debug level. Must be one of 0, 1 and 2.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-si</option>
+        </term>
+	<listitem><para>Run an interactive install command</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--showinstall</option>
+        </term>
+	<listitem><para>Toggle interactive install command.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-ss</option>
+        </term>
+	<listitem><para>Run an interactive Slackware installation script.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--showslack</option>
+        </term>
+	<listitem><para>Toggle interactive Slackware installation script.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--autodoinst</option>
+        </term>
+	<listitem><para>Toggle creation of a doinst.sh script.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--strip</option>
+        </term>
+	<listitem><para>Toggle stripping any ELF binaries found inside the package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--stripso</option>
+        </term>
+	<listitem><para>Toggle stripping any ELF libraries (.so) found inside the package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--addso</option>
+        </term>
+	<listitem><para>Search for any shared libs and add them to /etc/ld.so.conf</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--reset-uids</option>
+        </term>
+	<listitem><para>Reset perms for all files/dirs to 755 and the owner/group for all dirs to root.root</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--gzman</option>
+        </term>
+	<listitem><para>Compress any man pages found inside the package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--docdir</option>
+        </term>
+	<listitem><para>Where to put documentation files.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--umask</option>
+        </term>
+	<listitem><para>Set the umask value.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--exclude</option>
+        </term>
+	<listitem><para>Exclude these files/directories from the package.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--include</option>
+        </term>
+	<listitem><para>Force the inclusion in the package of the files/dirs listed in the argument (a file).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--inspect</option>
+        </term>
+	<listitem><para>Inspect the package's file list</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--review-spec</option>
+        </term>
+	<listitem><para>Review the spec file before creating a .rpm.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--review-control</option>
+        </term>
+	<listitem><para>Review the control file before creating a .deb.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--newslack</option>
+        </term>
+	<listitem><para>Use the new (8.1+) Slackware description format ("--newslack" implies "-S")</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--with-tar</option>
+        </term>
+	<listitem><para>Manually set the path to the tar binary.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--deldoc</option>
+        </term>
+	<listitem><para>Toggle deletion of doc-pak upon termination.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--deldesc</option>
+        </term>
+	<listitem><para>Toggle deletion of description-pak upon termination.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--delspec</option>
+        </term>
+	<listitem><para>Toggle deletion of spec file upon termination.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--bk</option>
+        </term>
+	<listitem><para>Backup any overwritten files</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--backup</option>
+        </term>
+	<listitem><para>Toggle backup</para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>FILES</title>
+    <para>This program reads its configuration from /etc/checkinstallrc, which can be used to override defaults.
+          Command line arguments override settings in the configuration file.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+
+    <para>This manual page was written by &dhusername; &lt;&dhemail&gt; for
+      the &debian; system (but may be used by others).  Permission is
+      granted to copy, distribute and/or modify this document under
+      the terms of the &gnu; General Public License, Version 2.
+    </para>
+	<para>
+	  On Debian systems, the complete text of the GNU General Public
+	  License can be found in /usr/share/common-licenses/GPL.
+	</para>
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+
