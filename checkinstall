@@ -2589,6 +2589,8 @@ cat "$DIRECTORIO_FUENTE/description-pak"| egrep -v "$SUMMARY|^[ 	]*$" | while re
    echo " "$line >> $BUILD_DIR/DEBIAN/control
 done
 
+# Remove empty fields
+sed -i -e '/^[A-Z][a-z]\+:\s\+$/d' $BUILD_DIR/DEBIAN/control
 
 # Use the preinstall-pak script if we have it
 if [ -f preinstall-pak ]; then
